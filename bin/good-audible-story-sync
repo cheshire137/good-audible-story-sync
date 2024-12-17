@@ -2,3 +2,5 @@
 # encoding: utf-8
 
 require_relative "../lib/good_audible_story_sync"
+
+GoodAudibleStorySync::Audible::AuthFlow.call
