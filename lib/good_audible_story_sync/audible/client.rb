@@ -24,7 +24,12 @@ module GoodAudibleStorySync
       end
 
       def get_library
-        response = HTTParty.get("#{api_url}/1.0/library")
+        raise NotAuthenticatedError unless @auth.access_token
+        response = HTTParty.get("#{api_url}/1.0/library", headers: headers)
+        unless response.code == 200
+          raise "Error getting library (#{response.code}):\n#{response.body}"
+        end
+        JSON.parse(response.body)
       end
 
       private
