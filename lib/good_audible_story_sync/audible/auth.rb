@@ -6,6 +6,7 @@ require "httparty"
 require "json"
 require "securerandom"
 require "uri"
+require_relative "../util/encrypted_file"
 
 module GoodAudibleStorySync
   module Audible
@@ -127,6 +128,44 @@ module GoodAudibleStorySync
         end
 
         !@access_token.nil? && !@access_token.strip.empty?
+      end
+
+      def save_to_file(file_path)
+        data = {
+          "adp_token" => adp_token,
+          "device_private_key" => device_private_key,
+          "access_token" => access_token,
+          "refresh_token" => refresh_token,
+          "expires" => expires,
+          "website_cookies" => website_cookies,
+          "store_authentication_cookie" => store_authentication_cookie,
+          "device_info" => device_info,
+          "customer_info" => customer_info,
+        }
+        json_str = JSON.pretty_generate(data)
+        encrypted_file = Util::EncryptedFile.new(path: file_path)
+        encrypted_file.write(json_str)
+        File.exist?(file_path) && !File.empty?(file_path)
+      end
+
+      def load_from_file(file_path)
+        return false unless File.exist?(file_path)
+
+        encrypted_file = Util::EncryptedFile.new(path: file_path)
+        json_str = encrypted_file.read
+        return false if json_str.nil? || json_str.strip.empty?
+
+        data = JSON.parse(json_str)
+        @adp_token = data["adp_token"]
+        @device_private_key = data["device_private_key"]
+        @access_token = data["access_token"]
+        @refresh_token = data["refresh_token"]
+        @expires = data["expires"]
+        @website_cookies = data["website_cookies"]
+        @store_authentication_cookie = data["store_authentication_cookie"]
+        @device_info = data["device_info"]
+        @customer_info = data["customer_info"]
+        true
       end
 
       private
