@@ -102,7 +102,7 @@ module GoodAudibleStorySync
         end
 
         resp_json = JSON.parse(response.body)
-        success_data = resp_json["response"]["success"]
+        success_data = resp_json.dig("response", "success")
         raise "Failed to register device:\n#{response.body}" unless success_data
 
         tokens = success_data["tokens"]
