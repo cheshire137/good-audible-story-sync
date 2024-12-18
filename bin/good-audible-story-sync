@@ -3,7 +3,9 @@
 
 require_relative "../lib/good_audible_story_sync"
 
-audible_auth = GoodAudibleStorySync::Audible::AuthFlow.call(output_file: "credentials.txt")
+options = GoodAudibleStorySync::Options.parse(script_name: __FILE__)
+
+audible_auth = GoodAudibleStorySync::Audible::AuthFlow.call(output_file: options.credentials_file)
 if audible_auth.nil?
   exit 1
 end
