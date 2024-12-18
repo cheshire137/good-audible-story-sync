@@ -7,3 +7,10 @@ audible_auth = GoodAudibleStorySync::Audible::AuthFlow.call
 if audible_auth.nil?
   exit 1
 end
+
+audible_client = GoodAudibleStorySync::Audible::Client.new(auth: audible_auth)
+puts "Getting Audible user profile..."
+user_profile = audible_client.get_user_profile
+puts "\tAudible user ID: #{user_profile["user_id"]}"
+puts "\tName: #{user_profile["name"]}"
+puts "\tEmail: #{user_profile["email"]}"
