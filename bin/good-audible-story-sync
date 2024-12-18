@@ -3,4 +3,7 @@
 
 require_relative "../lib/good_audible_story_sync"
 
-GoodAudibleStorySync::Audible::AuthFlow.call
+audible_auth = GoodAudibleStorySync::Audible::AuthFlow.call
+if audible_auth.nil?
+  exit 1
+end
