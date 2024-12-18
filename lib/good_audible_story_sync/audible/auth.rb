@@ -98,7 +98,7 @@ module GoodAudibleStorySync
         response = HTTParty.post("https://api.amazon.#{US_DOMAIN}/auth/register",
           body: body.to_json)
         unless response.code == 200
-          raise "Failed to register device: (HTTP #{response.code})\n#{response.body}"
+          raise "Failed to register device (#{response.code}):\n#{response.body}"
         end
 
         resp_json = JSON.parse(response.body)
