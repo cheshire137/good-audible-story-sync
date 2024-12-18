@@ -13,12 +13,24 @@ module GoodAudibleStorySync
       US_MARKETPLACE_ID = "AF2M0KC94RCEA"
       US_DOMAIN = "com"
 
+      attr_reader :adp_token, :device_private_key, :access_token, :refresh_token, :expires,
+        :website_cookies, :store_authentication_cookie, :device_info, :customer_info
+
       def initialize
         verifier = SecureRandom.random_bytes(32)
         @code_verifier = Base64.urlsafe_encode64(verifier).delete_suffix("=")
         @device_serial = SecureRandom.uuid.upcase.delete('-')
         @client_id = "#{device_serial}#A2CZJZGLK2JJVM".unpack1('H*')
         @auth_code = nil
+        @adp_token = nil
+        @device_private_key = nil
+        @access_token = nil
+        @refresh_token = nil
+        @expires = nil
+        @website_cookies = nil
+        @store_authentication_cookie = nil
+        @device_info = nil
+        @customer_info = nil
       end
 
       def oauth_url
@@ -94,32 +106,27 @@ module GoodAudibleStorySync
         raise "Failed to register device:\n#{response.body}" unless success_data
 
         tokens = success_data["tokens"]
-        adp_token = tokens["mac_dms"]["adp_token"]
-        device_private_key = tokens["mac_dms"]["device_private_key"]
-        store_authentication_cookie = tokens["store_authentication_cookie"]
-        access_token = tokens["bearer"]["access_token"]
-        refresh_token = tokens["bearer"]["refresh_token"]
-        expires_s = tokens["bearer"]["expires_in"].to_i
-        expires = Time.now.utc + (expires_s/86400.0)
+        @adp_token = tokens.dig("mac_dms", "adp_token")
+        @device_private_key = tokens.dig("mac_dms", "device_private_key")
+        @store_authentication_cookie = tokens["store_authentication_cookie"]
+        @access_token = tokens.dig("bearer", "access_token")
+        @refresh_token = tokens.dig("bearer", "refresh_token")
+        expires_s = tokens.dig("bearer", "expires_in").to_i
+        @expires = Time.now.utc + (expires_s/86400.0)
+
         extensions = success_data["extensions"]
-        device_info = extensions["device_info"]
-        customer_info = extensions["customer_info"]
-        website_cookies = {}
+        @device_info = extensions["device_info"]
+        @customer_info = extensions["customer_info"]
+
+        @website_cookies = {}
         tokens["website_cookies"].each do |cookie|
-          website_cookies[cookie["Name"]] = cookie["Value"].gsub('"', '')
+          value = cookie["Value"]
+          @website_cookies[cookie["Name"]] = if value
+            value.gsub('"', '')
+          end
         end
 
-        {
-          "adp_token" => adp_token,
-          "device_private_key" => device_private_key,
-          "access_token" => access_token,
-          "refresh_token" => refresh_token,
-          "expires" => expires,
-          "website_cookies" => website_cookies,
-          "store_authentication_cookie" => store_authentication_cookie,
-          "device_info" => device_info,
-          "customer_info" => customer_info,
-        }
+        !@access_token.nil? && !@access_token.strip.empty?
       end
 
       private
