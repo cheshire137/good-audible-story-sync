@@ -14,6 +14,7 @@ GEM
       csv
       mini_mime (>= 1.0.0)
       multi_xml (>= 0.5.2)
+    lockbox (2.0.0)
     logger (1.6.3)
     mechanize (2.12.2)
       addressable (~> 2.8)
@@ -68,6 +69,7 @@ PLATFORMS
 
 DEPENDENCIES
   httparty (~> 0.22.0)
+  lockbox (~> 2.0.0)
   mechanize (~> 2.12.2)
 
 BUNDLED WITH
