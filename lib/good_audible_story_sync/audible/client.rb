@@ -12,11 +12,12 @@ module GoodAudibleStorySync
 
       US_DOMAIN = "com"
 
-      sig { params(auth: Auth).void }
-      def initialize(auth:)
+      sig { params(auth: Auth, options: Options).void }
+      def initialize(auth:, options:)
         @auth = auth
         @api_url = "https://api.audible.#{US_DOMAIN}"
         @have_attempted_token_refresh = false
+        @options = options
       end
 
       sig { returns(Hash) }
@@ -70,6 +71,7 @@ module GoodAudibleStorySync
         new_access_token, new_expires = Auth.refresh_token(@auth.refresh_token)
         @auth.access_token = new_access_token
         @auth.expires = new_expires
+        @auth.save_to_file(@options.credentials_file)
         @have_attempted_token_refresh = true
       end
     end
