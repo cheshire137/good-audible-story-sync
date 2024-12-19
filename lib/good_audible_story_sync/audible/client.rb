@@ -55,7 +55,7 @@ module GoodAudibleStorySync
 
       sig { params(action: String, response: HTTParty::Response).returns(T.untyped) }
       def handle_json_response(action:, response:)
-        Auth.handle_error(action: action, response: response) unless response.code == 200
+        Auth.handle_http_error(action: action, response: response) unless response.code == 200
         JSON.parse(response.body)
       end
 
