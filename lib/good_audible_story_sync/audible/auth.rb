@@ -130,7 +130,7 @@ module GoodAudibleStorySync
         !@access_token.nil? && !@access_token.strip.empty?
       end
 
-      def save_to_file(file_path)
+      def to_json
         data = {
           "adp_token" => adp_token,
           "device_private_key" => device_private_key,
@@ -142,9 +142,12 @@ module GoodAudibleStorySync
           "device_info" => device_info,
           "customer_info" => customer_info,
         }
-        json_str = JSON.pretty_generate(data)
+        JSON.pretty_generate(data)
+      end
+
+      def save_to_file(file_path)
         encrypted_file = Util::EncryptedFile.new(path: file_path)
-        encrypted_file.write(json_str)
+        encrypted_file.write(to_json)
         File.exist?(file_path) && !File.empty?(file_path)
       end
 
