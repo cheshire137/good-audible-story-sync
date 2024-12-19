@@ -28,12 +28,26 @@ module GoodAudibleStorySync
         make_json_request(make_request, action: "get user profile")
       end
 
-      sig { returns T.untyped }
-      def get_library
+      # https://audible.readthedocs.io/en/master/misc/external_api.html#library
+      sig { params(page: Integer, per_page: Integer).returns([Integer, T::Array[Hash]]) }
+      def get_library(page: 1, per_page: 50)
         raise NotAuthenticatedError unless @auth.access_token
 
-        make_request = -> { HTTParty.get("#{@api_url}/1.0/library", headers: headers) }
-        make_json_request(make_request, action: "get library")
+        params = {
+          "sort_by" => "-PurchaseDate",
+          "include_pending" => "false",
+          "num_results" => per_page,
+          "page" => page,
+          "response_groups" => "is_finished,listening_status,percent_complete",
+        }
+        url = "#{@api_url}/1.0/library?#{URI.encode_www_form(params)}"
+        make_request = -> { HTTParty.get(url, headers: headers) }
+        total_count = T.let(0, Integer)
+        process_headers = ->(headers) { total_count = headers["total-count"].to_i }
+        library_data = make_json_request(make_request, action: "get library",
+          process_headers: process_headers)
+        page_items = library_data["items"]
+        [total_count, page_items]
       end
 
       private
