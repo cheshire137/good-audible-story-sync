@@ -8,19 +8,15 @@ module GoodAudibleStorySync
     class AuthFlow
       extend T::Sig
 
-      sig { params(output_file: T.nilable(String)).returns(T.nilable(Auth)) }
-      def self.run(output_file: nil)
+      sig { params(output_file: String).returns(T.nilable(Auth)) }
+      def self.run(output_file:)
         audible_auth = Auth.new
 
-        if output_file && File.exist?(output_file)
+        if File.exist?(output_file)
           puts "Found existing GoodAudibleStorySync credential file #{output_file}, loading..."
           audible_auth.load_from_file(output_file)
         else
-          if output_file
-            puts "GoodAudibleStorySync credential file #{output_file} does not yet exist"
-          else
-            puts "No GoodAudibleStorySync credential file provided"
-          end
+          puts "GoodAudibleStorySync credential file #{output_file} does not yet exist"
           puts "Please authenticate with Audible via: #{audible_auth.oauth_url}"
           puts "\nEnter the URL you were redirected to after logging in:"
           url_after_login = gets.chomp
@@ -42,12 +38,8 @@ module GoodAudibleStorySync
           device_name = audible_auth.device_info["device_name"]
           puts "\nSuccessfully authenticated with Audible and registered device: #{device_name}"
 
-          if output_file
-            puts "Saving auth credentials to #{output_file}..."
-            audible_auth.save_to_file(output_file)
-          else
-            puts "No output file given, not persisting auth credentials"
-          end
+          puts "Saving auth credentials to #{output_file}..."
+          audible_auth.save_to_file(output_file)
         end
 
         audible_auth
