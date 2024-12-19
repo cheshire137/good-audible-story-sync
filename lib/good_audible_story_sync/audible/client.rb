@@ -9,7 +9,6 @@ module GoodAudibleStorySync
       extend T::Sig
 
       class NotAuthenticatedError < StandardError; end
-      class InvalidTokenError < StandardError; end
 
       US_DOMAIN = "com"
 
@@ -44,7 +43,7 @@ module GoodAudibleStorySync
       def make_json_request(make_request, action:)
         response = make_request.call
         handle_json_response(action: action, response: response)
-      rescue InvalidTokenError
+      rescue Auth::InvalidTokenError
         if @have_attempted_token_refresh
           puts "Invalid token persists after refreshing it, giving up"
         else
@@ -56,31 +55,13 @@ module GoodAudibleStorySync
 
       sig { params(action: String, response: HTTParty::Response).returns(T.untyped) }
       def handle_json_response(action:, response:)
-        handle_error(action: action, response: response) unless response.code == 200
+        Auth.handle_error(action: action, response: response) unless response.code == 200
         JSON.parse(response.body)
       end
 
       sig { returns(T::Hash[String, String]) }
       def headers
         { "Authorization" => "Bearer #{@auth.access_token}" }
-      end
-
-      def handle_error(action:, response:)
-        json = begin
-          JSON.parse(response.body)
-        rescue JSON::ParserError
-          raise "Error trying to #{action} (#{response.code}):\n#{response.body}"
-        end
-
-        error_type = json["error"]
-        raise InvalidTokenError if error_type == "invalid_token"
-
-        if error_type
-          error_description = json["error_description"]
-          raise "Error trying to #{action} (#{response.code}): #{error_type} #{error_description}"
-        end
-
-        raise "Error trying to #{action} (#{response.code}):\n#{response.body}"
       end
 
       sig { void }

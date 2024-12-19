@@ -17,6 +17,27 @@ module GoodAudibleStorySync
       US_MARKETPLACE_ID = "AF2M0KC94RCEA"
       US_DOMAIN = "com"
 
+      class InvalidTokenError < StandardError; end
+
+      sig { params(action: String, response: HTTParty::Response).void }
+      def self.handle_error(action:, response:)
+        json = begin
+          JSON.parse(response.body)
+        rescue JSON::ParserError
+          raise "Failed to #{action} (#{response.code}):\n#{response.body}"
+        end
+
+        error_type = json["error"]
+        raise InvalidTokenError if error_type == "invalid_token"
+
+        if error_type
+          error_description = json["error_description"]
+          raise "Failed to #{action} (#{response.code}): #{error_type} #{error_description}"
+        end
+
+        raise "Failed to #{action} (#{response.code}):\n#{response.body}"
+      end
+
       sig { params(expires_s: Integer).returns(Time) }
       def self.expiration_time_from_seconds(expires_s)
         Time.now.utc + (expires_s/86400.0)
@@ -32,9 +53,7 @@ module GoodAudibleStorySync
           "source_token" => source_token,
         }
         response = HTTParty.post("https://api.amazon.#{US_DOMAIN}/auth/token", body: body)
-        unless response.code == 200
-          raise "Failed to refresh token (#{response.code}):\n#{response.body}"
-        end
+        handle_error(action: "refresh token", response: response) unless response.code == 200
 
         json = JSON.parse(response.body)
         expires_s = json["expires_in"].to_i
@@ -114,6 +133,7 @@ module GoodAudibleStorySync
       sig { returns T::Boolean }
       def register_device
         raise "No authorization code has been set" if auth_code.nil? || auth_code.size < 1
+
         body = {
           "requested_token_type" => ["bearer", "mac_dms", "website_cookies",
             "store_authentication_cookie"],
@@ -138,10 +158,11 @@ module GoodAudibleStorySync
           },
           "requested_extensions" => ["device_info", "customer_info"],
         }
+
         response = HTTParty.post("https://api.amazon.#{US_DOMAIN}/auth/register",
           body: body.to_json)
         unless response.code == 200
-          raise "Failed to register device (#{response.code}):\n#{response.body}"
+          self.class.handle_error(action: "register device", response: response)
         end
 
         resp_json = JSON.parse(response.body)
