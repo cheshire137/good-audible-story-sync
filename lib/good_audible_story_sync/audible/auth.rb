@@ -22,8 +22,35 @@ module GoodAudibleStorySync
         Time.now.utc + (expires_s/86400.0)
       end
 
-      attr_reader :adp_token, :device_private_key, :access_token, :refresh_token, :expires,
-        :website_cookies, :store_authentication_cookie, :device_info, :customer_info
+      sig { params(source_token: String).returns([String, Time]) }
+      def self.refresh_token(source_token)
+        body = {
+          "requested_token_type" => "access_token",
+          "source_token_type" => "refresh_token",
+          "app_name" => "Audible",
+          "app_version" => "3.56.2",
+          "source_token" => source_token,
+        }
+        response = HTTParty.post("https://api.amazon.#{US_DOMAIN}/auth/token", body: body)
+        unless response.code == 200
+          raise "Failed to refresh token (#{response.code}):\n#{response.body}"
+        end
+
+        json = JSON.parse(response.body)
+        expires_s = json["expires_in"].to_i
+        expires = expiration_time_from_seconds(expires_s)
+        access_token = json["access_token"]
+        [access_token, expires]
+      end
+
+      attr_reader :adp_token, :device_private_key, :refresh_token, :website_cookies,
+        :store_authentication_cookie, :device_info, :customer_info
+
+      sig { returns T.nilable(String) }
+      attr_accessor :access_token
+
+      sig { returns T.nilable(Time) }
+      attr_accessor :expires
 
       sig { void }
       def initialize
