@@ -39,10 +39,15 @@ module GoodAudibleStorySync
       private
 
       sig do
-        params(make_request: T.proc.returns(HTTParty::Response), action: String).returns(T.untyped)
+        params(
+          make_request: T.proc.returns(HTTParty::Response),
+          action: String,
+          process_headers: T.nilable(T.proc.params(arg0: Hash).void),
+        ).returns(T.untyped)
       end
-      def make_json_request(make_request, action:)
+      def make_json_request(make_request, action:, process_headers: nil)
         response = make_request.call
+        process_headers&.call(response.headers)
         handle_json_response(action: action, response: response)
       rescue Auth::InvalidTokenError
         if @have_attempted_token_refresh
