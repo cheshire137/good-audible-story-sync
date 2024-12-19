@@ -9,7 +9,7 @@ module GoodAudibleStorySync
       extend T::Sig
 
       sig { params(output_file: T.nilable(String)).returns(T.nilable(Auth)) }
-      def self.call(output_file: nil)
+      def self.run(output_file: nil)
         audible_auth = Auth.new
 
         if output_file && File.exist?(output_file)
