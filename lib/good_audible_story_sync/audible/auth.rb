@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# typed: true
 
 require "base64"
 require "digest"
@@ -11,12 +12,15 @@ require_relative "../util/encrypted_file"
 module GoodAudibleStorySync
   module Audible
     class Auth
+      extend T::Sig
+
       US_MARKETPLACE_ID = "AF2M0KC94RCEA"
       US_DOMAIN = "com"
 
       attr_reader :adp_token, :device_private_key, :access_token, :refresh_token, :expires,
         :website_cookies, :store_authentication_cookie, :device_info, :customer_info
 
+      sig { void }
       def initialize
         verifier = SecureRandom.random_bytes(32)
         @code_verifier = Base64.urlsafe_encode64(verifier).delete_suffix("=")
@@ -34,6 +38,7 @@ module GoodAudibleStorySync
         @customer_info = nil
       end
 
+      sig { returns String }
       def oauth_url
         m = Digest::SHA256.digest(code_verifier)
         s256_code_challenge = Base64.urlsafe_encode64(m).delete_suffix("=")
@@ -64,12 +69,17 @@ module GoodAudibleStorySync
         "#{base_url}?#{URI.encode_www_form(params)}"
       end
 
+      sig { params(url: String).void }
       def set_authorization_code_from_oauth_redirect_url(url)
         uri = URI.parse(url)
-        redirect_params = URI.decode_www_form(uri.query).to_h
-        @auth_code = redirect_params["openid.oa2.authorization_code"]
+        query = uri.query
+        if query
+          redirect_params = URI.decode_www_form(query).to_h
+          @auth_code = redirect_params["openid.oa2.authorization_code"]
+        end
       end
 
+      sig { returns T::Boolean }
       def register_device
         raise "No authorization code has been set" if auth_code.nil? || auth_code.size < 1
         body = {
@@ -130,6 +140,7 @@ module GoodAudibleStorySync
         !@access_token.nil? && !@access_token.strip.empty?
       end
 
+      sig { returns String }
       def to_json
         data = {
           "adp_token" => adp_token,
@@ -145,18 +156,20 @@ module GoodAudibleStorySync
         JSON.pretty_generate(data)
       end
 
+      sig { params(file_path: String).returns(T::Boolean) }
       def save_to_file(file_path)
         encrypted_file = Util::EncryptedFile.new(path: file_path)
         encrypted_file.write(to_json)
         File.exist?(file_path) && !File.empty?(file_path)
       end
 
+      sig { params(file_path: String).returns(T::Boolean) }
       def load_from_file(file_path)
         return false unless File.exist?(file_path)
 
         encrypted_file = Util::EncryptedFile.new(path: file_path)
         json_str = encrypted_file.read
-        return false if json_str.nil? || json_str.strip.empty?
+        return false if json_str.strip.empty?
 
         data = JSON.parse(json_str)
         @adp_token = data["adp_token"]

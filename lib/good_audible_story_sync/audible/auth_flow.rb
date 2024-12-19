@@ -1,10 +1,14 @@
 # frozen_string_literal: true
+# typed: true
 
 require "uri"
 
 module GoodAudibleStorySync
   module Audible
     class AuthFlow
+      extend T::Sig
+
+      sig { params(output_file: T.nilable(String)).returns(T.nilable(Auth)) }
       def self.call(output_file: nil)
         audible_auth = Auth.new
 
