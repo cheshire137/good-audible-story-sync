@@ -1,4 +1,11 @@
 # typed: true
 # frozen_string_literal: true
 
-# Add your extra requires here (`bin/tapioca require` can be used to bootstrap this list)
+require "base64"
+require "digest"
+require "httparty"
+require "json"
+require "lockbox"
+require "optparse"
+require "securerandom"
+require "uri"
