@@ -17,6 +17,11 @@ module GoodAudibleStorySync
       US_MARKETPLACE_ID = "AF2M0KC94RCEA"
       US_DOMAIN = "com"
 
+      sig { params(expires_s: Integer).returns(Time) }
+      def self.expiration_time_from_seconds(expires_s)
+        Time.now.utc + (expires_s/86400.0)
+      end
+
       attr_reader :adp_token, :device_private_key, :access_token, :refresh_token, :expires,
         :website_cookies, :store_authentication_cookie, :device_info, :customer_info
 
@@ -123,7 +128,7 @@ module GoodAudibleStorySync
         @access_token = tokens.dig("bearer", "access_token")
         @refresh_token = tokens.dig("bearer", "refresh_token")
         expires_s = tokens.dig("bearer", "expires_in").to_i
-        @expires = Time.now.utc + (expires_s/86400.0)
+        @expires = self.class.expiration_time_from_seconds(expires_s)
 
         extensions = success_data["extensions"]
         @device_info = extensions["device_info"]
