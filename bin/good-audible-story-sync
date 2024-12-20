@@ -13,9 +13,7 @@ end
 audible_client = GoodAudibleStorySync::Audible::Client.new(auth: audible_auth, options: options)
 puts "Getting Audible user profile..."
 user_profile = audible_client.get_user_profile
-puts "\tAudible user ID: #{user_profile["user_id"]}"
-puts "\tName: #{user_profile["name"]}"
-puts "\tEmail: #{user_profile["email"]}"
+puts user_profile.to_s(indent_level: 1)
 
 puts "Getting Audible library..."
 all_library_items = audible_client.get_all_library_pages

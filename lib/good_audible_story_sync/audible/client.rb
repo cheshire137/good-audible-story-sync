@@ -20,14 +20,15 @@ module GoodAudibleStorySync
         @options = options
       end
 
-      sig { returns(Hash) }
+      sig { returns(UserProfile) }
       def get_user_profile
         raise NotAuthenticatedError unless @auth.access_token
 
         url = "#{@api_url}/user/profile"
         puts "GET #{url}"
         make_request = -> { HTTParty.get(url, headers: headers) }
-        make_json_request(make_request, action: "get user profile")
+        data = make_json_request(make_request, action: "get user profile")
+        UserProfile.new(data)
       end
 
       # https://audible.readthedocs.io/en/master/misc/external_api.html#library

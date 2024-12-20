@@ -8,3 +8,4 @@ end
 require_relative "audible/auth"
 require_relative "audible/auth_flow"
 require_relative "audible/client"
+require_relative "audible/user_profile"
