@@ -1,10 +1,12 @@
 # frozen_string_literal: true
+# typed: true
 
 require "optparse"
 
 module GoodAudibleStorySync
   class Options
     DEFAULT_CREDENTIALS_FILE = "credentials.txt"
+    DEFAULT_LIBRARY_FILE = "audible_library.json"
 
     def self.parse(script_name:, argv: ARGV)
       puts "Parsing options..."
@@ -23,18 +25,39 @@ module GoodAudibleStorySync
           "Path to file that will store encrypted Audible credentials. Defaults to " \
             "#{DEFAULT_CREDENTIALS_FILE}.",
         )
+        opts.on(
+          "-l LIBRARY_FILE",
+          "--library-file",
+          String,
+          "Path to file that will store info about items in your Audible library. Defaults to " \
+            "#{DEFAULT_LIBRARY_FILE}.",
+        )
       end
 
       def parse
         @option_parser.parse!(@argv, into: @options)
-        unless credentials_file == DEFAULT_CREDENTIALS_FILE
+
+        if credentials_file == DEFAULT_CREDENTIALS_FILE
+          puts "Using default credentials file"
+        else
           puts "Using credentials file #{credentials_file}"
         end
+
+        if library_file == DEFAULT_LIBRARY_FILE
+          puts "Using default library file"
+        else
+          puts "Using library file #{library_file}"
+        end
+
         self
       end
 
       def credentials_file
         @credentials_file ||= @options[:"credentials-file"] || DEFAULT_CREDENTIALS_FILE
+      end
+
+      def library_file
+        @library_file ||= @options[:"library-file"] || DEFAULT_LIBRARY_FILE
       end
     end
   end

@@ -124,20 +124,20 @@ module GoodAudibleStorySync
         [total_count, page_items]
       end
 
-      sig { returns T::Array[LibraryItem] }
+      sig { returns Library }
       def get_all_library_pages
         per_page = 999
-        result = T.let([], T::Array[LibraryItem])
+        all_items = T.let([], T::Array[LibraryItem])
         total_count, page_items = get_library_page(page: 1, per_page: per_page)
         puts "\tLoaded #{page_items.size} of #{total_count} item(s) in library"
-        result.concat(page_items)
+        all_items.concat(page_items)
         total_pages = (total_count.to_f / per_page).ceil
         (2..total_pages).each do |page|
           _, page_items = get_library_page(page: page, per_page: per_page)
-          puts "\tLoaded #{result.size + page_items.size} of #{total_count} item(s) in library"
-          result.concat(page_items)
+          puts "\tLoaded #{all_items.size + page_items.size} of #{total_count} item(s) in library"
+          all_items.concat(page_items)
         end
-        result
+        Library.new(items: all_items)
       end
 
       private

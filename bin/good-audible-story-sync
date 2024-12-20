@@ -28,15 +28,26 @@ else
     "Audible library"
 end
 
-library_items = audible_client.get_all_library_pages
-library_item_units = library_items.size == 1 ? "book" : "books"
-puts "Loaded #{library_items.size} #{library_item_units} from Audible library"
+library_file = options.library_file
+if File.exist?(library_file)
+  puts "Loading Audible library from file #{library_file}..."
+  library = GoodAudibleStorySync::Audible::Library.load_from_file(library_file)
+else
+  puts "Fetching Audible library from API..."
+  library = audible_client.get_all_library_pages
+  puts "Saving Audible library data to file #{library_file}..."
+  library.save_to_file(library_file)
+end
 
-library_items.each do |library_item|
+total_items = library.total_items
+library_item_units = total_items == 1 ? "book" : "books"
+puts "Loaded #{total_items} #{library_item_units} from Audible library"
+
+library.items.each do |library_item|
   library_item.finished_at = finish_times_by_asin[library_item.asin]
 end
 
-finished_items, unfinished_items = library_items.partition(&:finished?)
+finished_items, unfinished_items = library.items.partition(&:finished?)
 total_finished = finished_items.size
 finished_item_units = total_finished == 1 ? "book" : "books"
 puts "#{total_finished} #{finished_item_units} in Audible library have been finished:"
