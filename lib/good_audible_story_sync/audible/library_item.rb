@@ -16,6 +16,18 @@ module GoodAudibleStorySync
         @data["asin"]
       end
 
+      sig { returns T::Array[String] }
+      def narrators
+        hashes = @data["narrators"] || []
+        hashes.map { |hash| hash["name"] }
+      end
+
+      sig { returns T::Array[String] }
+      def authors
+        hashes = @data["authors"] || []
+        hashes.map { |hash| hash["name"] }
+      end
+
       sig { returns T.nilable(String) }
       def title
         @data["title"]
