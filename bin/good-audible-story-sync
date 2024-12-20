@@ -18,15 +18,5 @@ puts "\tName: #{user_profile["name"]}"
 puts "\tEmail: #{user_profile["email"]}"
 
 puts "Getting Audible library..."
-per_page = 50
-all_library_items = []
-total_count, page_items = audible_client.get_library(page: 1, per_page: per_page)
-puts "\tLoaded #{page_items.size} of #{total_count} item(s) in library"
-all_library_items.concat(page_items)
-total_pages = (total_count.to_f / per_page).ceil
-(2..total_pages).each do |page|
-  _, page_items = audible_client.get_library(page: page, per_page: per_page)
-  puts "\tLoaded #{all_library_items.size + page_items.size} of #{total_count} item(s) in library"
-  all_library_items.concat(page_items)
-end
+all_library_items = audible_client.get_all_library_pages
 File.write("audible_library.json", JSON.pretty_generate(all_library_items))
