@@ -5,6 +5,8 @@ module GoodAudibleStorySync
   module Util
     extend T::Sig
 
+    TAB = "  "
+
     sig { params(words: T::Array[String]).returns(String) }
     def self.join_words(words)
       case words.size

@@ -28,10 +28,11 @@ module GoodAudibleStorySync
 
       sig { params(indent_level: Integer).returns(String) }
       def to_s(indent_level: 0)
-        tab = "  " * indent_level
-        "#{tab}Audible user ID: #{user_id}\n" \
-          "#{tab}Name: #{name}\n" \
-          "#{tab}Email: #{email}\n"
+        tab = Util::TAB * indent_level
+        line1 = "#{tab}Audible user ID: #{user_id}"
+        line2 = "#{tab}Name: #{name}"
+        line3 = "#{tab}Email: #{email}"
+        [line1, line2, line3].join("\n")
       end
     end
   end
