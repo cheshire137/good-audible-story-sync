@@ -32,7 +32,7 @@ module GoodAudibleStorySync
       end
 
       # https://audible.readthedocs.io/en/master/misc/external_api.html#library
-      sig { params(page: Integer, per_page: Integer).returns([Integer, T::Array[Hash]]) }
+      sig { params(page: Integer, per_page: Integer).returns([Integer, T::Array[LibraryItem]]) }
       def get_library_page(page: 1, per_page: 50)
         raise NotAuthenticatedError unless @auth.access_token
 
@@ -50,14 +50,14 @@ module GoodAudibleStorySync
         process_headers = ->(headers) { total_count = headers["total-count"].to_i }
         library_data = make_json_request(make_request, action: "get library",
           process_headers: process_headers)
-        page_items = library_data["items"]
+        page_items = library_data["items"].map { |data| LibraryItem.new(data) }
         [total_count, page_items]
       end
 
-      sig { returns T::Array[Hash] }
+      sig { returns T::Array[LibraryItem] }
       def get_all_library_pages
         per_page = 999
-        result = T.let([], T::Array[Hash])
+        result = T.let([], T::Array[LibraryItem])
         total_count, page_items = get_library_page(page: 1, per_page: per_page)
         puts "\tLoaded #{page_items.size} of #{total_count} item(s) in library"
         result.concat(page_items)
