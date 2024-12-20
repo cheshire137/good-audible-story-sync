@@ -18,5 +18,4 @@ unless audible_auth.loaded_from_file?
   puts user_profile.to_s(indent_level: 1)
 end
 
-puts "Aggregate stats:"
-pp audible_client.get_aggregate_stats
+pp audible_client.get_finish_times_by_asin

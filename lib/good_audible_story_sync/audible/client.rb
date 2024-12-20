@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 # typed: true
 
+require "date"
 require "httparty"
 
 module GoodAudibleStorySync
@@ -29,6 +30,28 @@ module GoodAudibleStorySync
         make_request = -> { HTTParty.get(url, headers: headers) }
         data = make_json_request(make_request, action: "get user profile")
         UserProfile.new(data)
+      end
+
+      # https://audible.readthedocs.io/en/master/misc/external_api.html#get--1.0-stats-status-finished
+      sig { returns T::Hash[String, DateTime] }
+      def get_finish_times_by_asin
+        raise NotAuthenticatedError unless @auth.access_token
+
+        url = "#{@api_url}/1.0/stats/status/finished"
+        puts "GET #{url}"
+        make_request = -> { HTTParty.get(url, headers: headers) }
+        data = make_json_request(make_request, action: "get finish times by ASIN")
+        finished_items = (data["mark_as_finished_status_list"] || [])
+          .select { |item| item["is_marked_as_finished"] }
+        result = T.let({}, T::Hash[String, DateTime])
+        finished_items.each do |item|
+          asin = item["asin"]
+          timestamp = DateTime.parse(item["event_timestamp"])
+          if !result.key?(asin) || timestamp > result[asin]
+            result[asin] = timestamp
+          end
+        end
+        result
       end
 
       # https://audible.readthedocs.io/en/master/misc/external_api.html#get--1.0-stats-aggregates
