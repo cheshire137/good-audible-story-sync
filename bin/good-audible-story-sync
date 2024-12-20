@@ -15,12 +15,5 @@ puts "Getting Audible user profile..."
 user_profile = audible_client.get_user_profile
 puts user_profile.to_s(indent_level: 1)
 
-puts "Getting first Audible library page..."
-total_count, items = audible_client.get_library_page(per_page: 1)
-puts "#{total_count} item(s) in Audible library"
-item = items.first
-asin = item&.asin
-if asin
-  puts "Loading ASIN #{asin} details..."
-  pp audible_client.get_library_item(asin: asin)
-end
+collections = audible_client.get_collections
+File.write("tmp/collections.json", JSON.pretty_generate(collections))

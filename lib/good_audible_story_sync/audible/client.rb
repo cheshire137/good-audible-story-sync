@@ -31,6 +31,17 @@ module GoodAudibleStorySync
         UserProfile.new(data)
       end
 
+      # https://audible.readthedocs.io/en/master/misc/external_api.html#get--1.0-collections
+      sig { returns(Hash) }
+      def get_collections
+        raise NotAuthenticatedError unless @auth.access_token
+
+        url = "#{@api_url}/1.0/collections"
+        puts "GET #{url}"
+        make_request = -> { HTTParty.get(url, headers: headers) }
+        make_json_request(make_request, action: "get collections")
+      end
+
       # https://audible.readthedocs.io/en/master/misc/external_api.html#get--1.0-library-(string-asin)
       sig { params(asin: String).returns(LibraryItem) }
       def get_library_item(asin:)
