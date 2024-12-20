@@ -89,6 +89,7 @@ module GoodAudibleStorySync
         @store_authentication_cookie = nil
         @device_info = nil
         @customer_info = nil
+        @loaded_from_file = T.let(false, T::Boolean)
       end
 
       sig { returns String }
@@ -219,6 +220,11 @@ module GoodAudibleStorySync
         File.exist?(file_path) && !File.empty?(file_path)
       end
 
+      sig { returns T::Boolean }
+      def loaded_from_file?
+        @loaded_from_file
+      end
+
       sig { params(file_path: String).returns(T::Boolean) }
       def load_from_file(file_path)
         return false unless File.exist?(file_path)
@@ -237,7 +243,8 @@ module GoodAudibleStorySync
         @store_authentication_cookie = data["store_authentication_cookie"]
         @device_info = data["device_info"]
         @customer_info = data["customer_info"]
-        true
+
+        @loaded_from_file = true
       end
 
       private

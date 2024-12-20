@@ -11,9 +11,12 @@ if audible_auth.nil?
 end
 
 audible_client = GoodAudibleStorySync::Audible::Client.new(auth: audible_auth, options: options)
-puts "Getting Audible user profile..."
-user_profile = audible_client.get_user_profile
-puts user_profile.to_s(indent_level: 1)
 
-collections = audible_client.get_collections
-File.write("tmp/collections.json", JSON.pretty_generate(collections))
+unless audible_auth.loaded_from_file?
+  puts "Getting Audible user profile..."
+  user_profile = audible_client.get_user_profile
+  puts user_profile.to_s(indent_level: 1)
+end
+
+# collections = audible_client.get_collections
+# File.write("tmp/collections.json", JSON.pretty_generate(collections))
