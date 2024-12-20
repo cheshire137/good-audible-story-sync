@@ -26,14 +26,16 @@ module GoodAudibleStorySync
 
       sig { returns T::Array[String] }
       def narrators
+        return @narrators if @narrators
         hashes = @data["narrators"] || []
-        hashes.map { |hash| hash["name"] }
+        @narrators = hashes.map { |hash| hash["name"] }
       end
 
       sig { returns T::Array[String] }
       def authors
+        return @authors if @authors
         hashes = @data["authors"] || []
-        hashes.map { |hash| hash["name"] }
+        @authors = hashes.map { |hash| hash["name"] }
       end
 
       sig { returns T.nilable(String) }
