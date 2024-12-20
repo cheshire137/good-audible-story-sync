@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 # typed: true
 
+require "date"
+
 module GoodAudibleStorySync
   module Audible
     class LibraryItem
@@ -9,6 +11,12 @@ module GoodAudibleStorySync
       sig { params(data: Hash).void }
       def initialize(data)
         @data = data
+      end
+
+      sig { returns T.nilable(DateTime) }
+      def added_to_library_at
+        date_str = @data.dig("library_status", "date_added")
+        DateTime.parse(date_str) if date_str
       end
 
       sig { returns T.nilable(String) }
@@ -47,6 +55,11 @@ module GoodAudibleStorySync
         is_finished = @data.dig("listening_status", "is_finished")
         return percent_complete == 100 if is_finished.nil?
         is_finished
+      end
+
+      sig { returns T.nilable(String) }
+      def isbn
+        @data["isbn"]
       end
 
       sig { returns T.nilable(Integer) }
