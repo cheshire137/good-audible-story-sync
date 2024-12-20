@@ -15,7 +15,7 @@ module GoodAudibleStorySync
 
       sig { returns T.nilable(DateTime) }
       def added_to_library_at
-        date_str = @data.dig("library_status", "date_added")
+        date_str = @data.dig("library_status", "date_added") || @data["purchase_date"]
         DateTime.parse(date_str) if date_str
       end
 
@@ -43,13 +43,13 @@ module GoodAudibleStorySync
         @data["title"]
       end
 
-      sig { returns T.nilable(Integer) }
+      sig { returns Integer }
       def percent_complete
         pct = T.let(
           @data["percent_complete"] || @data.dig("listening_status", "percent_complete"),
           T.nilable(Float)
         )
-        pct&.round
+        pct.nil? ? 0 : pct.round
       end
 
       sig { returns T::Boolean }
@@ -57,6 +57,12 @@ module GoodAudibleStorySync
         is_finished = @data.dig("listening_status", "is_finished")
         return percent_complete == 100 if is_finished.nil?
         is_finished
+      end
+
+      sig { returns T::Boolean }
+      def started?
+        return false if @data["listening_status"].nil?
+        percent_complete > 0
       end
 
       sig { returns T.nilable(String) }
