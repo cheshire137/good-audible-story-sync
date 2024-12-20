@@ -24,7 +24,9 @@ module GoodAudibleStorySync
       def get_user_profile
         raise NotAuthenticatedError unless @auth.access_token
 
-        make_request = -> { HTTParty.get("#{@api_url}/user/profile", headers: headers) }
+        url = "#{@api_url}/user/profile"
+        puts "GET #{url}"
+        make_request = -> { HTTParty.get(url, headers: headers) }
         make_json_request(make_request, action: "get user profile")
       end
 
@@ -41,6 +43,7 @@ module GoodAudibleStorySync
           "response_groups" => "is_finished,listening_status,percent_complete",
         }
         url = "#{@api_url}/1.0/library?#{URI.encode_www_form(params)}"
+        puts "GET #{url}"
         make_request = -> { HTTParty.get(url, headers: headers) }
         total_count = T.let(0, Integer)
         process_headers = ->(headers) { total_count = headers["total-count"].to_i }

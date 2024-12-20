@@ -52,7 +52,9 @@ module GoodAudibleStorySync
           "app_version" => "3.56.2",
           "source_token" => source_token,
         }
-        response = HTTParty.post("https://api.amazon.#{US_DOMAIN}/auth/token", body: body)
+        url = "https://api.amazon.#{US_DOMAIN}/auth/token"
+        puts "POST #{url}"
+        response = HTTParty.post(url, body: body)
         handle_http_error(action: "refresh token", response: response) unless response.code == 200
 
         json = JSON.parse(response.body)
@@ -159,8 +161,9 @@ module GoodAudibleStorySync
           "requested_extensions" => ["device_info", "customer_info"],
         }
 
-        response = HTTParty.post("https://api.amazon.#{US_DOMAIN}/auth/register",
-          body: body.to_json)
+        url = "https://api.amazon.#{US_DOMAIN}/auth/register"
+        puts "POST #{url}"
+        response = HTTParty.post(url, body: body.to_json)
         unless response.code == 200
           self.class.handle_http_error(action: "register device", response: response)
         end
