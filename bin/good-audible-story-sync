@@ -18,4 +18,37 @@ unless audible_auth.loaded_from_file?
   puts user_profile.to_s(indent_level: 1)
 end
 
-pp audible_client.get_finish_times_by_asin
+finish_times_by_asin = audible_client.get_finish_times_by_asin
+if finish_times_by_asin.empty?
+  puts "No books in Audible library have been finished"
+  exit 0
+else
+  finish_time_units = finish_times_by_asin.size == 1 ? "book" : "books"
+  puts "Loaded finished status for #{finish_times_by_asin.size} #{finish_time_units} from " \
+    "Audible library"
+end
+
+library_items = audible_client.get_all_library_pages
+library_item_units = library_items.size == 1 ? "book" : "books"
+puts "Loaded #{library_items.size} #{library_item_units} from Audible library"
+
+library_items.each do |library_item|
+  library_item.finished_at = finish_times_by_asin[library_item.asin]
+end
+
+finished_items, unfinished_items = library_items.partition(&:finished?)
+total_finished = finished_items.size
+finished_item_units = total_finished == 1 ? "book" : "books"
+puts "#{total_finished} #{finished_item_units} in Audible library have been finished:"
+
+finished_items.each do |library_item|
+  puts library_item.to_s(indent_level: 1)
+end
+
+if unfinished_items.empty?
+  puts "All books in Audible library have been finished!"
+else
+  total_unfinished = unfinished_items.size
+  unfinished_item_units = total_unfinished == 1 ? "book" : "books"
+  puts "#{total_unfinished} #{unfinished_item_units} in Audible library have not been finished"
+end

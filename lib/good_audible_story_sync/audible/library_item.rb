@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# encoding: utf-8
 # typed: true
 
 require "date"
@@ -7,6 +8,9 @@ module GoodAudibleStorySync
   module Audible
     class LibraryItem
       extend T::Sig
+
+      sig { returns T.nilable(DateTime) }
+      attr_accessor :finished_at
 
       sig { params(data: Hash).void }
       def initialize(data)
@@ -54,6 +58,7 @@ module GoodAudibleStorySync
 
       sig { returns T::Boolean }
       def finished?
+        return true if finished_at
         is_finished = @data.dig("listening_status", "is_finished")
         return percent_complete == 100 if is_finished.nil?
         is_finished
@@ -73,6 +78,35 @@ module GoodAudibleStorySync
       sig { returns T.nilable(Integer) }
       def time_remaining_in_seconds
         @data.dig("listening_status", "time_remaining_seconds")
+      end
+
+      sig { params(indent_level: Integer).returns(String) }
+      def title_and_authors(indent_level: 0)
+        "#{Util::TAB * indent_level}#{title} by #{Util.join_words(authors)}"
+      end
+
+      sig { params(indent_level: Integer).returns(String) }
+      def narrator_summary(indent_level: 0)
+        "#{Util::TAB * indent_level}⮑ Narrated by #{Util.join_words(narrators)}"
+      end
+
+      sig { returns String }
+      def finish_status
+        finished_at = self.finished_at
+        if finished_at
+          "Finished #{Util.pretty_time(finished_at)}"
+        elsif finished?
+          "Finished"
+        else
+          "Not finished"
+        end
+      end
+
+      sig { params(indent_level: Integer).returns(String) }
+      def to_s(indent_level: 0)
+        line1 = "#{title_and_authors(indent_level: indent_level)} — #{finish_status}"
+        line2 = narrator_summary(indent_level: indent_level + 1)
+        [line1, line2].join("\n")
       end
 
       sig { returns Hash }
