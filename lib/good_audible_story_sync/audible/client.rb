@@ -31,6 +31,26 @@ module GoodAudibleStorySync
         UserProfile.new(data)
       end
 
+      # https://audible.readthedocs.io/en/master/misc/external_api.html#get--1.0-library-(string-asin)
+      sig { params(asin: String).returns(LibraryItem) }
+      def get_library_item(asin:)
+        raise NotAuthenticatedError unless @auth.access_token
+
+        params = {
+          "response_groups" => "contributors,media,price,product_attrs,product_desc," \
+            "product_details,product_extended_attrs,product_plan_details,product_plans," \
+            "rating,sample,sku,series,reviews,ws4v,origin,relationships,review_attrs," \
+            "categories,badge_types,category_ladders,claim_code_url,is_downloaded," \
+            "is_finished,is_returnable,origin_asin,pdf_url,percent_complete,periodicals," \
+            "provided_review",
+        }
+        url = "#{@api_url}/1.0/library/#{asin}?#{URI.encode_www_form(params)}"
+        puts "GET #{url}"
+        make_request = -> { HTTParty.get(url, headers: headers) }
+        data = make_json_request(make_request, action: "get library item #{asin}")
+        LibraryItem.new(data["item"])
+      end
+
       # https://audible.readthedocs.io/en/master/misc/external_api.html#library
       sig { params(page: Integer, per_page: Integer).returns([Integer, T::Array[LibraryItem]]) }
       def get_library_page(page: 1, per_page: 50)

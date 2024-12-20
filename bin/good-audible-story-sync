@@ -16,6 +16,11 @@ user_profile = audible_client.get_user_profile
 puts user_profile.to_s(indent_level: 1)
 
 puts "Getting first Audible library page..."
-total_count, items = audible_client.get_library_page(per_page: 10)
-puts "Loaded #{items.size} of #{total_count} item(s)"
-File.write("audible_library-pg1.json", JSON.pretty_generate(items.map(&:to_h)))
+total_count, items = audible_client.get_library_page(per_page: 1)
+puts "#{total_count} item(s) in Audible library"
+item = items.first
+asin = item&.asin
+if asin
+  puts "Loading ASIN #{asin} details..."
+  pp audible_client.get_library_item(asin: asin)
+end
