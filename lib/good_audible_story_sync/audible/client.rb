@@ -31,8 +31,24 @@ module GoodAudibleStorySync
         UserProfile.new(data)
       end
 
+      # https://audible.readthedocs.io/en/master/misc/external_api.html#get--1.0-stats-aggregates
+      sig { returns Hash }
+      def get_aggregate_stats
+        raise NotAuthenticatedError unless @auth.access_token
+
+        params = {
+          "locale" => "en_US",
+          "response_groups" => "total_listening_stats",
+          "store" => "Audible",
+        }
+        url = "#{@api_url}/1.0/stats/aggregates?#{URI.encode_www_form(params)}"
+        puts "GET #{url}"
+        make_request = -> { HTTParty.get(url, headers: headers) }
+        make_json_request(make_request, action: "get aggregate stats")
+      end
+
       # https://audible.readthedocs.io/en/master/misc/external_api.html#get--1.0-collections
-      sig { returns(Hash) }
+      sig { returns Hash }
       def get_collections
         raise NotAuthenticatedError unless @auth.access_token
 

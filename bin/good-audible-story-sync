@@ -18,5 +18,5 @@ unless audible_auth.loaded_from_file?
   puts user_profile.to_s(indent_level: 1)
 end
 
-# collections = audible_client.get_collections
-# File.write("tmp/collections.json", JSON.pretty_generate(collections))
+puts "Aggregate stats:"
+pp audible_client.get_aggregate_stats
