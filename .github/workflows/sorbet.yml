@@ -1,0 +1,39 @@
+name: Run Sorbet typechecker
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "**.rb"
+      - "**.rbi"
+      - Gemfile
+      - Gemfile.lock
+      - .github/workflows/sorbet.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          ruby-version: ruby
+
+      - name: Install dependencies
+        run: bundle install
+
+      - name: Check types
+        run: bundle exec srb tc
