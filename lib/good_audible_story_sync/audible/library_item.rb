@@ -16,6 +16,11 @@ module GoodAudibleStorySync
         @data["asin"]
       end
 
+      sig { returns T.nilable(String) }
+      def title
+        @data["title"]
+      end
+
       sig { returns T.nilable(Integer) }
       def percent_complete
         pct = T.let(
