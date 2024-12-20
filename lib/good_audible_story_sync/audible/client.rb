@@ -153,7 +153,7 @@ module GoodAudibleStorySync
         response = make_request.call
         process_headers&.call(response.headers)
         handle_json_response(action: action, response: response)
-      rescue Auth::InvalidTokenError
+      rescue Auth::InvalidTokenError, Auth::ForbiddenError
         if @have_attempted_token_refresh
           puts "Invalid token persists after refreshing it, giving up"
         else

@@ -18,13 +18,17 @@ module GoodAudibleStorySync
       US_DOMAIN = "com"
 
       class InvalidTokenError < StandardError; end
+      class ForbiddenError < StandardError; end
 
       sig { params(action: String, response: HTTParty::Response).void }
       def self.handle_http_error(action:, response:)
+        code = response.code
+        raise ForbiddenError if code == 403
+
         json = begin
           JSON.parse(response.body)
         rescue JSON::ParserError
-          raise "Failed to #{action} (#{response.code}):\n#{response.body}"
+          raise "Failed to #{action} (#{code}):\n#{response.body}"
         end
 
         error_type = json["error"]
@@ -32,10 +36,15 @@ module GoodAudibleStorySync
 
         if error_type
           error_description = json["error_description"]
-          raise "Failed to #{action} (#{response.code}): #{error_type} #{error_description}"
+          raise "Failed to #{action} (#{code}): #{error_type} #{error_description}"
         end
 
-        raise "Failed to #{action} (#{response.code}):\n#{response.body}"
+        message = json["message"]
+        if message
+          raise "Failed to #{action} (#{code}): #{message}"
+        end
+
+        raise "Failed to #{action} (#{code}):\n#{response.body}"
       end
 
       sig { params(expires_s: Integer).returns(Time) }
