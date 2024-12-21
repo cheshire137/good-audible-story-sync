@@ -53,8 +53,13 @@ module GoodAudibleStorySync
         @loaded_from_file = true
       end
 
+      sig { returns T::Boolean }
+      def any_finished_time_loaded?
+        items.any? { |library_item| !library_item.finished_at.nil? }
+      end
+
       sig { params(finish_times_by_asin: T::Hash[String, DateTime]).void }
-      def populate_finished_at(finish_times_by_asin)
+      def populate_finish_times(finish_times_by_asin)
         items.each do |library_item|
           asin = library_item.asin
           if asin
@@ -63,9 +68,54 @@ module GoodAudibleStorySync
         end
       end
 
+      sig { returns T::Array[LibraryItem] }
+      def finished_items
+        calculate_finished_unfinished_items
+        @finished_items
+      end
+
+      sig { returns T::Array[LibraryItem] }
+      def unfinished_items
+        calculate_finished_unfinished_items
+        @unfinished_items
+      end
+
+      sig { returns Integer }
+      def total_finished
+        @total_finished ||= finished_items.size
+      end
+
+      sig { returns Integer }
+      def total_unfinished
+        @total_unfinished ||= unfinished_items.size
+      end
+
+      sig { returns String }
+      def finished_item_units
+        total_finished == 1 ? "book" : "books"
+      end
+
+      sig { returns String }
+      def unfinished_item_units
+        total_unfinished == 1 ? "book" : "books"
+      end
+
       sig { returns String }
       def to_json
         JSON.pretty_generate(items.map(&:to_h))
+      end
+
+      private
+
+      sig { void }
+      def calculate_finished_unfinished_items
+        return if @finished_items && @unfinished_items
+        @finished_items, @unfinished_items = items.partition(&:finished?)
+        @finished_items.sort! do |a, b|
+          a_finish = T.must(a.finished_at)
+          b_finish = T.must(b.finished_at)
+          T.must(b_finish <=> a_finish)
+        end
       end
     end
   end
