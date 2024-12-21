@@ -4,11 +4,31 @@ Script to sync your read books from Audible to Goodreads and StoryGraph.
 
 ## How to use
 
+This is intended to be run from macOS.
+
 ```sh
 bin/good-audible-story-sync
 ```
 
-This will create a new Audible device that you can see on your Amazon [Installed on Devices](https://www.amazon.com/hz/mycd/digital-console/devicedetails?deviceFamily=AUDIBLE_APP) page for Audible.
+You will be prompted to log in to Audible and Storygraph. The tool saves your login credentials in
+an encrypted file and stores the encryption key in the macOS keychain, under the name
+'good_audible_story_sync_encryption_key'.
+
+After signing into Audible, it will create a new device that you can see on your Amazon
+[Installed on Devices](https://www.amazon.com/hz/mycd/digital-console/devicedetails?deviceFamily=AUDIBLE_APP)
+page for Audible. This allows accessing your Audible library information, such as which books
+you finished reading and when.
+
+## How to develop
+
+Built using Ruby version 3.3.6 on macOS.
+
+```sh
+bundle install
+bin/good-audible-story-sync
+```
+
+Run `srb tc` to run the [Sorbet type checker](https://sorbet.org/).
 
 ## Thanks
 
