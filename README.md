@@ -19,7 +19,16 @@ After signing into Audible, it will create a new device that you can see on your
 page for Audible. This allows accessing your Audible library information, such as which books
 you finished reading and when.
 
-## Sample output
+### Options
+
+```sh
+Usage: bin/good-audible-story-sync [options]
+    -c CREDENTIALS_FILE,             Path to file that will store encrypted credentials. Defaults to credentials.txt.
+        --credentials-file
+    -l, --library-file LIBRARY_FILE  Path to file that will store info about items in your Audible library. Defaults to audible_library.json.
+```
+
+### Sample output
 
 ```sh
 % bin/good-audible-story-sync -c my-creds.txt

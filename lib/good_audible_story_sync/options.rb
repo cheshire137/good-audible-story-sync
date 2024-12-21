@@ -26,7 +26,7 @@ module GoodAudibleStorySync
           "-c CREDENTIALS_FILE",
           "--credentials-file",
           String,
-          "Path to file that will store encrypted Audible credentials. Defaults to " \
+          "Path to file that will store encrypted credentials. Defaults to " \
             "#{DEFAULT_CREDENTIALS_FILE}.",
         )
         opts.on(
