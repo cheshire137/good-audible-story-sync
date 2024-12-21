@@ -5,14 +5,18 @@ require "optparse"
 
 module GoodAudibleStorySync
   class Options
+    extend T::Sig
+
     DEFAULT_CREDENTIALS_FILE = "credentials.txt"
     DEFAULT_LIBRARY_FILE = "audible_library.json"
 
+    # sig { params(script_name: String, argv: Array).returns(Options) }
     def self.parse(script_name:, argv: ARGV)
       puts "Parsing options..."
       new(script_name: script_name, argv: argv).parse
     end
 
+    # sig { params(script_name: String, argv: Array).void }
     def initialize(script_name:, argv: ARGV)
       @options = {}
       @argv = argv
@@ -34,6 +38,7 @@ module GoodAudibleStorySync
         )
       end
 
+      # sig { returns Options }
       def parse
         @option_parser.parse!(@argv, into: @options)
 
@@ -52,10 +57,12 @@ module GoodAudibleStorySync
         self
       end
 
+      # sig { returns String }
       def credentials_file
         @credentials_file ||= @options[:"credentials-file"] || DEFAULT_CREDENTIALS_FILE
       end
 
+      # sig { returns String }
       def library_file
         @library_file ||= @options[:"library-file"] || DEFAULT_LIBRARY_FILE
       end
