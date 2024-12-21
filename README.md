@@ -19,6 +19,29 @@ After signing into Audible, it will create a new device that you can see on your
 page for Audible. This allows accessing your Audible library information, such as which books
 you finished reading and when.
 
+## Sample output
+
+```sh
+% bin/good-audible-story-sync -c my-creds.txt
+Parsing options...
+Looking for 'good_audible_story_sync_encryption_key' in cheshire137's keychain...
+Using GoodAudibleStorySync encryption key from keychain
+Using credentials file my-creds.txt
+Using default library file
+Found existing GoodAudibleStorySync credential file my-creds.txt, loading...
+Reading encrypted file my-creds.txt...
+Loading Audible library from file audible_library.json...
+Loaded 156 books from Audible library
+35 books in Audible library have been finished:
+  Midnight in Chernobyl by Adam Higginbotham — Finished Sat December 21, 2024 at 12:56am
+    ⮑ Narrated by Jacques Roy
+...
+121 books in Audible library have not been finished
+
+Logging in to Storygraph...
+Found existing GoodAudibleStorySync credential file my-creds.txt, loading...
+```
+
 ## How to develop
 
 Built using Ruby version 3.3.6 on macOS.
