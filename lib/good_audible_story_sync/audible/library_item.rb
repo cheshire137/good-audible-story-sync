@@ -15,6 +15,7 @@ module GoodAudibleStorySync
       sig { params(data: Hash).void }
       def initialize(data)
         @data = data
+        @finished_at = data["finished_at"] ? DateTime.parse(data["finished_at"]) : nil
       end
 
       sig { returns T.nilable(DateTime) }
@@ -111,7 +112,7 @@ module GoodAudibleStorySync
 
       sig { returns Hash }
       def to_h
-        @data
+        @data.merge(finished_at: finished_at&.iso8601)
       end
     end
   end
