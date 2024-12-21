@@ -53,6 +53,16 @@ module GoodAudibleStorySync
         @loaded_from_file = true
       end
 
+      sig { params(finish_times_by_asin: T::Hash[String, DateTime]).void }
+      def populate_finished_at(finish_times_by_asin)
+        items.each do |library_item|
+          asin = library_item.asin
+          if asin
+            library_item.finished_at = finish_times_by_asin[asin]
+          end
+        end
+      end
+
       sig { returns String }
       def to_json
         JSON.pretty_generate(items.map(&:to_h))
