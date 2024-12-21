@@ -29,4 +29,5 @@ module GoodAudibleStorySync
 end
 
 require_relative "util/encrypted_file"
+require_relative "util/encrypted_json_file"
 require_relative "util/keychain"

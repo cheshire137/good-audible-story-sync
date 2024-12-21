@@ -7,7 +7,6 @@ require "httparty"
 require "json"
 require "securerandom"
 require "uri"
-require_relative "../util/encrypted_file"
 
 module GoodAudibleStorySync
   module Audible
@@ -206,27 +205,27 @@ module GoodAudibleStorySync
         !@access_token.nil? && !@access_token.strip.empty?
       end
 
-      sig { returns String }
-      def to_json
-        data = {
-          "adp_token" => adp_token,
-          "device_private_key" => device_private_key,
-          "access_token" => access_token,
-          "refresh_token" => refresh_token,
-          "expires" => expires,
-          "website_cookies" => website_cookies,
-          "store_authentication_cookie" => store_authentication_cookie,
-          "device_info" => device_info,
-          "customer_info" => customer_info,
+      sig { returns T::Hash[String, T.untyped] }
+      def to_h
+        {
+          "audible" => {
+            "adp_token" => adp_token,
+            "device_private_key" => device_private_key,
+            "access_token" => access_token,
+            "refresh_token" => refresh_token,
+            "expires" => expires,
+            "website_cookies" => website_cookies,
+            "store_authentication_cookie" => store_authentication_cookie,
+            "device_info" => device_info,
+            "customer_info" => customer_info,
+          },
         }
-        JSON.pretty_generate(data)
       end
 
-      sig { params(file_path: String).returns(T::Boolean) }
-      def save_to_file(file_path)
-        encrypted_file = Util::EncryptedFile.new(path: file_path)
-        encrypted_file.write(to_json)
-        File.exist?(file_path) && !File.empty?(file_path)
+      sig { params(encrypted_file: Util::EncryptedJsonFile).returns(T::Boolean) }
+      def save_to_file(encrypted_file)
+        bytes_written = encrypted_file.merge(to_h)
+        bytes_written > 0
       end
 
       sig { returns T::Boolean }
@@ -234,24 +233,22 @@ module GoodAudibleStorySync
         @loaded_from_file
       end
 
-      sig { params(file_path: String).returns(T::Boolean) }
-      def load_from_file(file_path)
-        return false unless File.exist?(file_path)
+      sig { params(encrypted_file: Util::EncryptedJsonFile).returns(T::Boolean) }
+      def load_from_file(encrypted_file)
+        return false unless encrypted_file.exists?
 
-        encrypted_file = Util::EncryptedFile.new(path: file_path)
-        json_str = encrypted_file.read
-        return false if json_str.strip.empty?
+        data = encrypted_file.load
 
-        data = JSON.parse(json_str)
-        @adp_token = data["adp_token"]
-        @device_private_key = data["device_private_key"]
-        @access_token = data["access_token"]
-        @refresh_token = data["refresh_token"]
-        @expires = data["expires"]
-        @website_cookies = data["website_cookies"]
-        @store_authentication_cookie = data["store_authentication_cookie"]
-        @device_info = data["device_info"]
-        @customer_info = data["customer_info"]
+        audible_data = data.key?("audible") ? data["audible"] : data
+        @adp_token = audible_data["adp_token"]
+        @device_private_key = audible_data["device_private_key"]
+        @access_token = audible_data["access_token"]
+        @refresh_token = audible_data["refresh_token"]
+        @expires = audible_data["expires"]
+        @website_cookies = audible_data["website_cookies"]
+        @store_authentication_cookie = audible_data["store_authentication_cookie"]
+        @device_info = audible_data["device_info"]
+        @customer_info = audible_data["customer_info"]
 
         @loaded_from_file = true
       end

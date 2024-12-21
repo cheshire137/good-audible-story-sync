@@ -57,9 +57,11 @@ module GoodAudibleStorySync
         self
       end
 
-      # sig { returns String }
+      # sig { returns Util::EncryptedJsonFile }
       def credentials_file
-        @credentials_file ||= @options[:"credentials-file"] || DEFAULT_CREDENTIALS_FILE
+        return @credentials_file if @credentials_file
+        path = @options[:"credentials-file"] || DEFAULT_CREDENTIALS_FILE
+        @credentials_file = Util::EncryptedJsonFile.new(path: path)
       end
 
       # sig { returns String }
