@@ -11,6 +11,7 @@ module GoodAudibleStorySync
     EMOJI_PREFIX = "⚙️"
     DEFAULT_CREDENTIALS_FILE = "credentials.txt"
     DEFAULT_LIBRARY_FILE = "audible_library.json"
+    DEFAULT_STORYGRAPH_FILE = "storygraph_data.json"
     DEFAULT_EXPIRATION_DAYS = 1
 
     # sig { params(script_name: String, argv: Array).returns(Options) }
@@ -46,6 +47,13 @@ module GoodAudibleStorySync
           "Max number of days to use cached data, such as Audible library, before " \
             "refreshing. Defaults to #{DEFAULT_EXPIRATION_DAYS}.",
         )
+        opts.on(
+          "-s STORYGRAPH_FILE",
+          "--storygraph-file",
+          String,
+          "Path to file that will store info about books on Storygraph. Defaults to " \
+            "#{DEFAULT_STORYGRAPH_FILE}.",
+        )
       end
 
       # sig { returns Options }
@@ -77,6 +85,11 @@ module GoodAudibleStorySync
       # sig { returns String }
       def library_file
         @library_file ||= @options[:"library-file"] || DEFAULT_LIBRARY_FILE
+      end
+
+      # sig { returns String }
+      def storygraph_file
+        @storygraph_file ||= @options[:"storygraph-file"] || DEFAULT_STORYGRAPH_FILE
       end
 
       # sig { returns Integer }
