@@ -97,8 +97,10 @@ module GoodAudibleStorySync
           "Finished #{Util.pretty_time(finished_at)}"
         elsif finished?
           "Finished"
+        elsif started?
+          "#{percent_complete}% complete"
         else
-          "Not finished"
+          "Not started"
         end
       end
 
