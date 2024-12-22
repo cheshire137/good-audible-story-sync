@@ -157,30 +157,49 @@ module GoodAudibleStorySync
         JSON.pretty_generate(items.map(&:to_h))
       end
 
-      sig { returns String }
-      def to_s
+      sig { params(limit: Integer).returns(String) }
+      def finished_items_summary(limit: 5)
         lines = T.let([
           "#{total_finished} #{finished_item_units} (#{finished_percent}%) in Audible library " \
             "have been finished:",
         ], T::Array[String])
-
-        lines.concat(finished_items.map { |item| item.to_s(indent_level: 1) })
-
-        if total_unfinished < 1
-          lines << "All books in Audible library have been finished!"
-        else
-          lines << "#{total_unfinished} #{unfinished_item_units} (#{unfinished_percent}%) in " \
-            "Audible library are unfinished."
-        end
-
-        if total_started < 1
-          lines << "No books in Audible library are in progress."
-        else
-          lines << "#{total_started} #{started_item_units} (#{started_percent}%) in Audible " \
-            "library are in progress."
-        end
-
+        lines.concat(finished_items.take(limit).map { |item| item.to_s(indent_level: 1) })
+        lines << "#{Util::TAB}..." if total_finished > limit
+        lines << ""
         lines.join("\n")
+      end
+
+      sig { params(limit: Integer).returns(T.nilable(String)) }
+      def not_started_items_summary(limit: 5)
+        return if total_not_started < 1
+
+        lines = T.let(["#{total_not_started} #{not_started_item_units} (#{not_started_percent}%) " \
+          "in Audible library have not been started:"], T::Array[String])
+        lines.concat(not_started_items.take(limit).map { |item| item.to_s(indent_level: 1) })
+        lines << "#{Util::TAB}..." if total_not_started > limit
+        lines << ""
+        lines.join("\n")
+      end
+
+      sig { params(limit: Integer).returns(T.nilable(String)) }
+      def started_items_summary(limit: 5)
+        return if total_started < 1
+
+        lines = T.let(["#{total_started} #{started_item_units} (#{started_percent}%) in Audible " \
+          "library are in progress:"], T::Array[String])
+        lines.concat(started_items.take(limit).map { |item| item.to_s(indent_level: 1) })
+        lines << "#{Util::TAB}..." if total_started > limit
+        lines << ""
+        lines.join("\n")
+      end
+
+      sig { params(limit: Integer).returns(String) }
+      def to_s(limit: 5)
+        [
+          finished_items_summary(limit: limit),
+          not_started_items_summary(limit: 5),
+          started_items_summary(limit: 5),
+        ].compact.join("\n")
       end
 
       private
