@@ -75,6 +75,18 @@ module GoodAudibleStorySync
       end
 
       sig { returns T::Array[LibraryItem] }
+      def started_items
+        calculate_started_not_started_items
+        @started_items
+      end
+
+      sig { returns T::Array[LibraryItem] }
+      def not_started_items
+        calculate_started_not_started_items
+        @not_started_items
+      end
+
+      sig { returns T::Array[LibraryItem] }
       def unfinished_items
         calculate_finished_unfinished_items
         @unfinished_items
@@ -86,8 +98,38 @@ module GoodAudibleStorySync
       end
 
       sig { returns Integer }
+      def finished_percent
+        @finished_percent ||= (total_finished.to_f / total_items * 100).round
+      end
+
+      sig { returns Integer }
+      def total_started
+        @total_started ||= started_items.size
+      end
+
+      sig { returns Integer }
+      def started_percent
+        @started_percent ||= (total_started.to_f / total_items * 100).round
+      end
+
+      sig { returns Integer }
       def total_unfinished
         @total_unfinished ||= unfinished_items.size
+      end
+
+      sig { returns Integer }
+      def unfinished_percent
+        @unfinished_percent ||= (total_unfinished.to_f / total_items * 100).round
+      end
+
+      sig { returns Integer }
+      def total_not_started
+        @total_not_started ||= not_started_items.size
+      end
+
+      sig { returns Integer }
+      def not_started_percent
+        @not_started_percent ||= (total_not_started.to_f / total_items * 100).round
       end
 
       sig { returns String }
@@ -96,13 +138,49 @@ module GoodAudibleStorySync
       end
 
       sig { returns String }
+      def started_item_units
+        total_started == 1 ? "book" : "books"
+      end
+
+      sig { returns String }
       def unfinished_item_units
         total_unfinished == 1 ? "book" : "books"
       end
 
       sig { returns String }
+      def not_started_item_units
+        total_not_started == 1 ? "book" : "books"
+      end
+
+      sig { returns String }
       def to_json
         JSON.pretty_generate(items.map(&:to_h))
+      end
+
+      sig { returns String }
+      def to_s
+        lines = T.let([
+          "#{total_finished} #{finished_item_units} (#{finished_percent}%) in Audible library " \
+            "have been finished:",
+        ], T::Array[String])
+
+        lines.concat(finished_items.map { |item| item.to_s(indent_level: 1) })
+
+        if total_unfinished < 1
+          lines << "All books in Audible library have been finished!"
+        else
+          lines << "#{total_unfinished} #{unfinished_item_units} (#{unfinished_percent}%) in " \
+            "Audible library are unfinished."
+        end
+
+        if total_started < 1
+          lines << "No books in Audible library are in progress."
+        else
+          lines << "#{total_started} #{started_item_units} (#{started_percent}%) in Audible " \
+            "library are in progress."
+        end
+
+        lines.join("\n")
       end
 
       private
@@ -116,6 +194,12 @@ module GoodAudibleStorySync
           b_finish = T.must(b.finished_at)
           T.must(b_finish <=> a_finish)
         end
+      end
+
+      sig { void }
+      def calculate_started_not_started_items
+        return if @started_items && @not_started_items
+        @started_items, @not_started_items = items.partition(&:started?)
       end
     end
   end

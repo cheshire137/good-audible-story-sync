@@ -50,17 +50,7 @@ unless library.any_finished_time_loaded?
   library.save_to_file(library_file)
 end
 
-puts "#{library.total_finished} #{library.finished_item_units} in Audible library have been finished:"
-library.finished_items.each do |library_item|
-  puts library_item.to_s(indent_level: 1)
-end
-
-if library.total_unfinished < 1
-  puts "All books in Audible library have been finished!"
-else
-  puts "#{library.total_unfinished} #{library.unfinished_item_units} in Audible library have " \
-    "not been finished"
-end
+puts library.to_s
 
 puts "\nLogging in to Storygraph..."
 
