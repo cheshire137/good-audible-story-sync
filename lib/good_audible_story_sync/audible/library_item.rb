@@ -87,7 +87,7 @@ module GoodAudibleStorySync
 
       sig { params(indent_level: Integer).returns(String) }
       def narrator_summary(indent_level: 0)
-        "#{Util::TAB * indent_level}⮑ Narrated by #{Util.join_words(narrators)}"
+        "#{Util::TAB * indent_level}#{Util::NEWLINE_EMOJI} Narrated by #{Util.join_words(narrators)}"
       end
 
       sig { returns String }
@@ -109,6 +109,12 @@ module GoodAudibleStorySync
         line1 = "#{title_and_authors(indent_level: indent_level)} — #{finish_status}"
         line2 = narrator_summary(indent_level: indent_level + 1)
         [line1, line2].join("\n")
+      end
+
+      sig { returns T.nilable(String) }
+      def search_query
+        return unless title
+        [title, Util.join_words(authors)].compact.join(" ")
       end
 
       sig { returns Hash }

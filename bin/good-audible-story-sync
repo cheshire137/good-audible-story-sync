@@ -54,3 +54,12 @@ storygraph_auth = GoodAudibleStorySync::Storygraph::AuthFlow.run(
   credentials_file: options.credentials_file
 )
 exit 1 unless storygraph_auth
+
+library_item = library.items.detect { |item| item.search_query }
+if library_item
+  storygraph_client = GoodAudibleStorySync::Storygraph::Client.new(auth: storygraph_auth)
+  storygraph_books = storygraph_client.search(library_item.search_query)
+  storygraph_books.each do |book|
+    puts book.to_s(indent_level: 1)
+  end
+end

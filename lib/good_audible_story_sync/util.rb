@@ -11,6 +11,7 @@ module GoodAudibleStorySync
     ERROR_EMOJI = "❌"
     SAVE_EMOJI = "💾"
     SUCCESS_EMOJI = "✅"
+    NEWLINE_EMOJI = "⮑"
 
     sig { params(words: T::Array[String]).returns(String) }
     def self.join_words(words)
