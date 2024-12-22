@@ -28,6 +28,11 @@ module GoodAudibleStorySync
           Nokogiri::XML::NodeSet)
         result_links.map { |element| Book.new(element, base_url: BASE_URL) }
       end
+
+      sig { params(query: String).returns(T.nilable(Book)) }
+      def find(query)
+        search(query).first
+      end
     end
   end
 end
