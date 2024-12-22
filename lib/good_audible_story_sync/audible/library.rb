@@ -9,6 +9,36 @@ module GoodAudibleStorySync
     class Library
       extend T::Sig
 
+      sig { params(client: Client, options: Options).returns(Library) }
+      def self.load_with_finish_times(client:, options:)
+        load_finish_times = T.let(false, T::Boolean)
+        library_file = options.library_file
+        library_is_cached = File.exist?(library_file)
+        library_cache_last_modified = library_is_cached ? File.mtime(library_file) : nil
+        should_refresh_library = library_cache_last_modified &&
+          library_cache_last_modified > options.refresh_cutoff_time
+
+        if library_is_cached && should_refresh_library
+          library = load_from_file(library_file)
+          load_finish_times = !library.any_finished_time_loaded?
+        else
+          if library_is_cached
+            puts "#{Util::INFO_EMOJI} Audible library cache has not been updated " \
+              "since #{Util.pretty_time(library_cache_last_modified)}, updating..."
+          end
+          library = client.get_all_library_pages
+          load_finish_times = true
+        end
+
+        if load_finish_times
+          finish_times_by_asin = client.get_finish_times_by_asin
+          library.populate_finish_times(finish_times_by_asin)
+          library.save_to_file(library_file)
+        end
+
+        library
+      end
+
       sig { params(file_path: String).returns(Library) }
       def self.load_from_file(file_path)
         library = new
@@ -32,6 +62,7 @@ module GoodAudibleStorySync
 
       sig { params(file_path: String).returns(T::Boolean) }
       def save_to_file(file_path)
+        puts "#{Util::SAVE_EMOJI} Saving Audible library data to file #{file_path}..."
         File.write(file_path, to_json)
         File.exist?(file_path) && !File.empty?(file_path)
       end
@@ -45,6 +76,7 @@ module GoodAudibleStorySync
       def load_from_file(file_path)
         return false unless File.exist?(file_path)
 
+        puts "#{Util::INFO_EMOJI} Loading Audible library from #{file_path}..."
         json_str = File.read(file_path)
         return false if json_str.strip.empty?
 

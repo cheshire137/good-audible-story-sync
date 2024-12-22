@@ -11,6 +11,7 @@ module GoodAudibleStorySync
     EMOJI_PREFIX = "⚙️"
     DEFAULT_CREDENTIALS_FILE = "credentials.txt"
     DEFAULT_LIBRARY_FILE = "audible_library.json"
+    DEFAULT_EXPIRATION_DAYS = 1
 
     # sig { params(script_name: String, argv: Array).returns(Options) }
     def self.parse(script_name:, argv: ARGV)
@@ -37,6 +38,13 @@ module GoodAudibleStorySync
           String,
           "Path to file that will store info about items in your Audible library. Defaults to " \
             "#{DEFAULT_LIBRARY_FILE}.",
+        )
+        opts.on(
+          "-e EXPIRATION_DAYS",
+          "--expiration-days",
+          Integer,
+          "Max number of days to use cached data, such as Audible library, before " \
+            "refreshing. Defaults to #{DEFAULT_EXPIRATION_DAYS}.",
         )
       end
 
@@ -69,6 +77,16 @@ module GoodAudibleStorySync
       # sig { returns String }
       def library_file
         @library_file ||= @options[:"library-file"] || DEFAULT_LIBRARY_FILE
+      end
+
+      # sig { returns Integer }
+      def expiration_days
+        @expiration_days ||= @options[:"expiration-days"] || DEFAULT_EXPIRATION_DAYS
+      end
+
+      # sig { returns Time }
+      def refresh_cutoff_time
+        Time.now - (expiration_days * 86400)
       end
     end
   end
