@@ -200,6 +200,7 @@ module GoodAudibleStorySync
       def calculate_started_not_started_items
         return if @started_items && @not_started_items
         @started_items, @not_started_items = items.partition(&:started?)
+        @started_items.sort! { |a, b| b.percent_complete <=> a.percent_complete }
       end
     end
   end
