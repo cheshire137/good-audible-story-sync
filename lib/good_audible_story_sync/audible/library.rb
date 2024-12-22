@@ -190,9 +190,17 @@ module GoodAudibleStorySync
         return if @finished_items && @unfinished_items
         @finished_items, @unfinished_items = items.partition(&:finished?)
         @finished_items.sort! do |a, b|
-          a_finish = T.must(a.finished_at)
-          b_finish = T.must(b.finished_at)
-          T.must(b_finish <=> a_finish)
+          a_finish_time = a.finished_at
+          b_finish_time = b.finished_at
+          if a_finish_time && b_finish_time
+            T.must(b_finish_time <=> a_finish_time)
+          elsif a_finish_time
+            -1
+          elsif b_finish_time
+            1
+          else
+            0
+          end
         end
       end
 
