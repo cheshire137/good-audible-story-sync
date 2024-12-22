@@ -138,6 +138,11 @@ module GoodAudibleStorySync
       end
 
       sig { returns String }
+      def item_units
+        total_items == 1 ? "book" : "books"
+      end
+
+      sig { returns String }
       def started_item_units
         total_started == 1 ? "book" : "books"
       end
@@ -196,6 +201,7 @@ module GoodAudibleStorySync
       sig { params(limit: Integer).returns(String) }
       def to_s(limit: 5)
         [
+          "Loaded #{total_items} #{item_units} from Audible library",
           finished_items_summary(limit: limit),
           not_started_items_summary(limit: 5),
           started_items_summary(limit: 5),

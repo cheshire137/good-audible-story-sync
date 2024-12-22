@@ -30,10 +30,6 @@ else
   library.save_to_file(library_file)
 end
 
-total_items = library.total_items
-library_item_units = total_items == 1 ? "book" : "books"
-puts "Loaded #{total_items} #{library_item_units} from Audible library"
-
 unless library.any_finished_time_loaded?
   finish_times_by_asin = audible_client.get_finish_times_by_asin
   library.populate_finish_times(finish_times_by_asin)
