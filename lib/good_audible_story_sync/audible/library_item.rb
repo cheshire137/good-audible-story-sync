@@ -59,10 +59,9 @@ module GoodAudibleStorySync
 
       sig { returns T::Boolean }
       def finished?
-        return true if finished_at
+        return true if finished_at || percent_complete == 100
         is_finished = @data.dig("listening_status", "is_finished")
-        return percent_complete == 100 if is_finished.nil?
-        is_finished
+        !!is_finished
       end
 
       sig { returns T::Boolean }
