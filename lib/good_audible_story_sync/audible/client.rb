@@ -112,7 +112,7 @@ module GoodAudibleStorySync
           "include_pending" => "false",
           "num_results" => per_page,
           "page" => page,
-          "response_groups" => "contributors,is_finished,listening_status,percent_complete,product_desc",
+          "response_groups" => "contributors,is_finished,listening_status,percent_complete,product_desc,product_details",
         }
         url = "#{@api_url}/1.0/library?#{URI.encode_www_form(params)}"
         puts "#{Util::INFO_EMOJI} GET #{url}"
