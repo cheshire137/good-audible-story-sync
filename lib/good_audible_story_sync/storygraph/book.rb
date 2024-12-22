@@ -6,27 +6,44 @@ module GoodAudibleStorySync
     class Book
       extend T::Sig
 
-      sig { params(search_result_node: Nokogiri::XML::Element, base_url: String).void }
-      def initialize(search_result_node, base_url:)
-        @search_result_node = search_result_node
-        @base_url = base_url
+      sig do
+        params(
+          node: Nokogiri::XML::Element,
+          base_url: String,
+          extra_data: T::Hash[String, T.untyped]
+        ).returns(Book)
+      end
+      def self.from_search_result(node, base_url:, extra_data: {})
+        Book.new({
+          "title" => node.search("h1:not(.sr-only)").first&.text,
+          "author" => node.search("h2:not(.sr-only)").first&.text,
+          "url" => base_url + node["href"],
+        }.merge(extra_data))
+      end
+
+      sig { params(data: T::Hash[String, T.untyped]).void }
+      def initialize(data)
+        @data = data
+      end
+
+      sig { returns T.nilable(String) }
+      def isbn
+        @data["isbn"]
       end
 
       sig { returns T.nilable(String) }
       def title
-        return @title if defined?(@title)
-        @title = @search_result_node.search("h1:not(.sr-only)").first&.text
+        @data["title"]
       end
 
       sig { returns T.nilable(String) }
       def author
-        return @author if defined?(@author)
-        @author = @search_result_node.search("h2:not(.sr-only)").first&.text
+        @data["author"]
       end
 
-      sig { returns String }
+      sig { returns T.nilable(String) }
       def url
-        @url ||= @base_url + @search_result_node["href"]
+        @data["url"]
       end
 
       sig { params(indent_level: Integer).returns(String) }
@@ -36,6 +53,16 @@ module GoodAudibleStorySync
           "#{Util::TAB * (indent_level + 1)}#{Util::NEWLINE_EMOJI} #{url}",
         ]
         lines.join("\n")
+      end
+
+      sig { returns String }
+      def inspect
+        @data.inspect
+      end
+
+      sig { returns T::Hash[String, T.untyped] }
+      def to_h
+        @data
       end
     end
   end
