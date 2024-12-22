@@ -95,9 +95,18 @@ module GoodAudibleStorySync
       def populate_finish_times(finish_times_by_asin)
         items.each do |library_item|
           asin = library_item.asin
-          if asin
-            library_item.finished_at = finish_times_by_asin[asin]
+          library_item.finished_at = if asin
+            finish_times_by_asin[asin]
           end
+        end
+
+        @finished_items = @unfinished_items = nil # force recalculation
+
+        if total_finished < 1
+          puts "#{Util::INFO_EMOJI} No books in Audible library have been finished."
+        else
+          puts "#{Util::INFO_EMOJI} Loaded finished status for #{total_finished} " \
+            "#{finished_item_units} from Audible library."
         end
       end
 
