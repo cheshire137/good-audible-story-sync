@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 # typed: true
+# encoding: utf-8
 
 require "optparse"
 
@@ -7,12 +8,13 @@ module GoodAudibleStorySync
   class Options
     extend T::Sig
 
+    EMOJI_PREFIX = "⚙️"
     DEFAULT_CREDENTIALS_FILE = "credentials.txt"
     DEFAULT_LIBRARY_FILE = "audible_library.json"
 
     # sig { params(script_name: String, argv: Array).returns(Options) }
     def self.parse(script_name:, argv: ARGV)
-      puts "Parsing options..."
+      puts "#{EMOJI_PREFIX} Parsing options..."
       new(script_name: script_name, argv: argv).parse
     end
 
@@ -43,15 +45,15 @@ module GoodAudibleStorySync
         @option_parser.parse!(@argv, into: @options)
 
         if credentials_file == DEFAULT_CREDENTIALS_FILE
-          puts "Using default credentials file"
+          puts "#{Util::TAB}Using default credentials file"
         else
-          puts "Using credentials file #{credentials_file}"
+          puts "#{Util::TAB}Using credentials file #{credentials_file}"
         end
 
         if library_file == DEFAULT_LIBRARY_FILE
-          puts "Using default library file"
+          puts "#{Util::TAB}Using default library file"
         else
-          puts "Using library file #{library_file}"
+          puts "#{Util::TAB}Using library file #{library_file}"
         end
 
         self

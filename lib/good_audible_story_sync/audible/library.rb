@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 # typed: true
+# encoding: utf-8
 
 require "date"
 
@@ -165,8 +166,8 @@ module GoodAudibleStorySync
       sig { params(limit: Integer).returns(String) }
       def finished_items_summary(limit: 5)
         lines = T.let([
-          "#{total_finished} #{finished_item_units} (#{finished_percent}%) in Audible library " \
-            "have been finished:",
+          "☑ #{total_finished} #{finished_item_units} " \
+            "(#{finished_percent}%) in Audible library have been finished:",
         ], T::Array[String])
         lines.concat(finished_items.take(limit).map { |item| item.to_s(indent_level: 1) })
         lines << "#{Util::TAB}..." if total_finished > limit
@@ -178,8 +179,10 @@ module GoodAudibleStorySync
       def not_started_items_summary(limit: 5)
         return if total_not_started < 1
 
-        lines = T.let(["#{total_not_started} #{not_started_item_units} (#{not_started_percent}%) " \
-          "in Audible library have not been started:"], T::Array[String])
+        lines = T.let([
+          "🌱 #{total_not_started} #{not_started_item_units} (#{not_started_percent}%) " \
+            "in Audible library have not been started:",
+        ], T::Array[String])
         lines.concat(not_started_items.take(limit).map { |item| item.to_s(indent_level: 1) })
         lines << "#{Util::TAB}..." if total_not_started > limit
         lines << ""
@@ -190,8 +193,10 @@ module GoodAudibleStorySync
       def started_items_summary(limit: 5)
         return if total_started < 1
 
-        lines = T.let(["#{total_started} #{started_item_units} (#{started_percent}%) in Audible " \
-          "library are in progress:"], T::Array[String])
+        lines = T.let([
+          "🔜 #{total_started} #{started_item_units} (#{started_percent}%) in Audible " \
+            "library are in progress:",
+        ], T::Array[String])
         lines.concat(started_items.take(limit).map { |item| item.to_s(indent_level: 1) })
         lines << "#{Util::TAB}..." if total_started > limit
         lines << ""
@@ -201,7 +206,7 @@ module GoodAudibleStorySync
       sig { params(limit: Integer).returns(String) }
       def to_s(limit: 5)
         [
-          "Loaded #{total_items} #{item_units} from Audible library",
+          "📚 Loaded #{total_items} #{item_units} from Audible library",
           finished_items_summary(limit: limit),
           not_started_items_summary(limit: 5),
           started_items_summary(limit: 5),

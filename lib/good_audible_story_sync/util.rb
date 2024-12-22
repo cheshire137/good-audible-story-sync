@@ -1,11 +1,16 @@
 # frozen_string_literal: true
 # typed: true
+# encoding: utf-8
 
 module GoodAudibleStorySync
   module Util
     extend T::Sig
 
     TAB = "  "
+    INFO_EMOJI = "ℹ️"
+    ERROR_EMOJI = "❌"
+    SAVE_EMOJI = "💾"
+    SUCCESS_EMOJI = "✅"
 
     sig { params(words: T::Array[String]).returns(String) }
     def self.join_words(words)

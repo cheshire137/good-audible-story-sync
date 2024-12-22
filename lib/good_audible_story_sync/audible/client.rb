@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 # typed: true
+# encoding: utf-8
 
 require "date"
 require "httparty"
@@ -26,7 +27,7 @@ module GoodAudibleStorySync
         raise NotAuthenticatedError unless @auth.access_token
 
         url = "#{@api_url}/user/profile"
-        puts "GET #{url}"
+        puts "#{Util::INFO_EMOJI} GET #{url}"
         make_request = -> { HTTParty.get(url, headers: headers) }
         data = make_json_request(make_request, action: "get user profile")
         UserProfile.new(data)
@@ -38,7 +39,7 @@ module GoodAudibleStorySync
         raise NotAuthenticatedError unless @auth.access_token
 
         url = "#{@api_url}/1.0/stats/status/finished"
-        puts "GET #{url}"
+        puts "#{Util::INFO_EMOJI} GET #{url}"
         make_request = -> { HTTParty.get(url, headers: headers) }
         data = make_json_request(make_request, action: "get finish times by ASIN")
         finished_items = (data["mark_as_finished_status_list"] || [])
@@ -65,7 +66,7 @@ module GoodAudibleStorySync
           "store" => "Audible",
         }
         url = "#{@api_url}/1.0/stats/aggregates?#{URI.encode_www_form(params)}"
-        puts "GET #{url}"
+        puts "#{Util::INFO_EMOJI} GET #{url}"
         make_request = -> { HTTParty.get(url, headers: headers) }
         make_json_request(make_request, action: "get aggregate stats")
       end
@@ -76,7 +77,7 @@ module GoodAudibleStorySync
         raise NotAuthenticatedError unless @auth.access_token
 
         url = "#{@api_url}/1.0/collections"
-        puts "GET #{url}"
+        puts "#{Util::INFO_EMOJI} GET #{url}"
         make_request = -> { HTTParty.get(url, headers: headers) }
         make_json_request(make_request, action: "get collections")
       end
@@ -95,7 +96,7 @@ module GoodAudibleStorySync
             "provided_review",
         }
         url = "#{@api_url}/1.0/library/#{asin}?#{URI.encode_www_form(params)}"
-        puts "GET #{url}"
+        puts "#{Util::INFO_EMOJI} GET #{url}"
         make_request = -> { HTTParty.get(url, headers: headers) }
         data = make_json_request(make_request, action: "get library item #{asin}")
         LibraryItem.new(data["item"])
@@ -114,7 +115,7 @@ module GoodAudibleStorySync
           "response_groups" => "contributors,is_finished,listening_status,percent_complete,product_desc",
         }
         url = "#{@api_url}/1.0/library?#{URI.encode_www_form(params)}"
-        puts "GET #{url}"
+        puts "#{Util::INFO_EMOJI} GET #{url}"
         make_request = -> { HTTParty.get(url, headers: headers) }
         total_count = T.let(0, Integer)
         process_headers = ->(headers) { total_count = headers["total-count"].to_i }
@@ -129,12 +130,13 @@ module GoodAudibleStorySync
         per_page = 999
         all_items = T.let([], T::Array[LibraryItem])
         total_count, page_items = get_library_page(page: 1, per_page: per_page)
-        puts "\tLoaded #{page_items.size} of #{total_count} item(s) in library"
+        puts "#{Util::TAB}Loaded #{page_items.size} of #{total_count} item(s) in library"
         all_items.concat(page_items)
         total_pages = (total_count.to_f / per_page).ceil
         (2..total_pages).each do |page|
           _, page_items = get_library_page(page: page, per_page: per_page)
-          puts "\tLoaded #{all_items.size + page_items.size} of #{total_count} item(s) in library"
+          puts "#{Util::TAB}Loaded #{all_items.size + page_items.size} of #{total_count} " \
+            "item(s) in library"
           all_items.concat(page_items)
         end
         Library.new(items: all_items)
@@ -155,7 +157,7 @@ module GoodAudibleStorySync
         handle_json_response(action: action, response: response)
       rescue Auth::InvalidTokenError, Auth::ForbiddenError
         if @have_attempted_token_refresh
-          puts "Invalid token persists after refreshing it, giving up"
+          puts "#{Util::ERROR_EMOJI} Invalid token persists after refreshing it, giving up"
         else
           refresh_token
         end
@@ -176,7 +178,7 @@ module GoodAudibleStorySync
 
       sig { void }
       def refresh_token
-        puts "Refreshing Audible access token..."
+        puts "#{Util::INFO_EMOJI} Refreshing Audible access token..."
         new_access_token, new_expires = Auth.refresh_token(@auth.refresh_token)
         @auth.access_token = new_access_token
         @auth.expires = new_expires

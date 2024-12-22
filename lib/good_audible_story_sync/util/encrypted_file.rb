@@ -15,11 +15,11 @@ module GoodAudibleStorySync
       def self.key
         result = Keychain.load(name: ENCRYPTION_KEY_NAME)
         if result.nil? || result.empty?
-          puts "No encryption key found in keychain. Generating a new one..."
+          puts "#{INFO_EMOJI} No encryption key found in keychain. Generating a new one..."
           result = Lockbox.generate_key
           Keychain.save(name: ENCRYPTION_KEY_NAME, value: result)
         else
-          puts "Using GoodAudibleStorySync encryption key from keychain"
+          puts "#{INFO_EMOJI} Using GoodAudibleStorySync encryption key from keychain"
         end
         result
       end
@@ -32,13 +32,13 @@ module GoodAudibleStorySync
 
       sig { params(contents: String).returns(Integer) }
       def write(contents)
-        puts "Saving encrypted file #{@path}..."
+        puts "#{SAVE_EMOJI} Saving encrypted file #{@path}..."
         File.write(@path, @lockbox.encrypt(contents))
       end
 
       sig { returns String }
       def read
-        puts "Reading encrypted file #{@path}..."
+        puts "#{INFO_EMOJI} Reading encrypted file #{@path}..."
         encrypted_contents = File.read(@path)
         @lockbox.decrypt(encrypted_contents)
       end

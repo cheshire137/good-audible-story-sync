@@ -13,20 +13,21 @@ end
 audible_client = GoodAudibleStorySync::Audible::Client.new(auth: audible_auth, options: options)
 
 unless audible_auth.loaded_from_file?
-  puts "Getting Audible user profile..."
+  puts "#{GoodAudibleStorySync::Util::INFO_EMOJI} Getting Audible user profile..."
   user_profile = audible_client.get_user_profile
   puts user_profile.to_s(indent_level: 1)
 end
 
 library_file = options.library_file
 if File.exist?(library_file)
-  puts "Loading Audible library from file #{library_file}..."
+  puts "#{GoodAudibleStorySync::Util::INFO_EMOJI} Loading Audible library from file #{library_file}..."
   library = GoodAudibleStorySync::Audible::Library.load_from_file(library_file)
 else
-  puts "Fetching Audible library from API..."
+  puts "#{GoodAudibleStorySync::Util::INFO_EMOJI} Fetching Audible library from API..."
   library = audible_client.get_all_library_pages
 
-  puts "Saving Audible library data to file #{library_file}..."
+  puts "#{GoodAudibleStorySync::Util::SAVE_EMOJI} Saving Audible library data to " \
+    "file #{library_file}..."
   library.save_to_file(library_file)
 end
 
@@ -35,21 +36,20 @@ unless library.any_finished_time_loaded?
   library.populate_finish_times(finish_times_by_asin)
 
   if library.total_finished < 1
-    puts "No books in Audible library have been finished"
+    puts "#{GoodAudibleStorySync::Util::INFO_EMOJI} No books in Audible library have been finished"
     exit 0
   end
 
   puts "Loaded finished status for #{library.total_finished} #{library.finished_item_units} from " \
     "Audible library"
 
-  puts "Saving Audible library data to file #{library_file}..."
+  puts "#{GoodAudibleStorySync::Util::SAVE_EMOJI} Saving Audible library data to file #{library_file}..."
   library.save_to_file(library_file)
 end
 
 puts library.to_s
 
-puts "\nLogging in to Storygraph..."
-
+puts "\n#{GoodAudibleStorySync::Util::INFO_EMOJI} Logging in to Storygraph..."
 storygraph_auth = GoodAudibleStorySync::Storygraph::AuthFlow.run(
   credentials_file: options.credentials_file
 )
