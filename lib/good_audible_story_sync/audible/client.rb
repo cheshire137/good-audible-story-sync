@@ -158,11 +158,12 @@ module GoodAudibleStorySync
       rescue Auth::InvalidTokenError, Auth::ForbiddenError
         if @have_attempted_token_refresh
           puts "#{Util::ERROR_EMOJI} Invalid token persists after refreshing it, giving up"
+          nil
         else
           refresh_token
+          response = make_request.call
+          handle_json_response(action: action, response: response)
         end
-        response = make_request.call
-        handle_json_response(action: action, response: response)
       end
 
       sig { params(action: String, response: HTTParty::Response).returns(T.untyped) }
