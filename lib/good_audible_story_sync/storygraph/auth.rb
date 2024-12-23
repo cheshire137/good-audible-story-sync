@@ -9,47 +9,60 @@ module GoodAudibleStorySync
     class Auth
       extend T::Sig
 
+      BASE_URL = "https://app.thestorygraph.com"
+
       class AuthError < StandardError; end
+
+      sig { params(email: String, password: String).returns(Auth) }
+      def self.sign_in(email:, password:)
+        auth = new(data: { "email" => email, "password" => password })
+        auth.sign_in
+        auth
+      end
+
+      sig { params(page: Mechanize::Page).returns(T::Boolean) }
+      def self.sign_in_page?(page)
+        page.uri.to_s.end_with?("/users/sign_in")
+      end
 
       sig { returns T.nilable(String) }
       attr_reader :email, :username
 
-      sig { void }
-      def initialize
-        @agent = Mechanize.new
-        @email = T.let(nil, T.nilable(String))
-        @password = T.let(nil, T.nilable(String))
-        @username = T.let(nil, T.nilable(String))
+      sig { returns Mechanize }
+      attr_reader :agent
+
+      sig { params(agent: T.nilable(Mechanize), data: T::Hash[String, T.nilable(String)]).void }
+      def initialize(agent: nil, data: {})
+        @agent = agent || Mechanize.new
+        @email = data["email"]
+        @password = data["password"]
+        @username = data["username"]
         @loaded_from_file = T.let(false, T::Boolean)
       end
 
-      sig { params(email: String, password: String).void }
-      def login(email:, password:)
-        puts "Signing into Storygraph as #{email}..."
-        page = @agent.get("https://app.thestorygraph.com/users/sign_in")
+      sig { void }
+      def sign_in
+        raise AuthError.new("Cannot sign in without credentials") if @email.nil? || @password.nil?
+
+        puts "#{Util::INFO_EMOJI} Signing into Storygraph as #{@email}..."
+        page = @agent.get("#{BASE_URL}/users/sign_in")
         sign_in_form = page.form_with(action: "/users/sign_in") do |form|
-          form["user[email]"] = email
-          form["user[password]"] = password
+          form["user[email]"] = @email
+          form["user[password]"] = @password
         end
         page_after_sign_in = sign_in_form.submit
         profile_link = page_after_sign_in.link_with(text: "Profile")
-        successful_sign_in = !profile_link.nil?
-        raise AuthError unless successful_sign_in
+        successful_sign_in = !profile_link.nil? && !self.class.sign_in_page?(page_after_sign_in)
+        raise AuthError.new("Invalid credentials") unless successful_sign_in
 
-        @email = email
-        @password = password
         @username = profile_link.href.split("/profile/").last
-        puts "Successfully signed in to Storygraph as #{@username}"
+        puts "#{Util::INFO_EMOJI} Successfully signed in to Storygraph as #{username}"
       end
 
       sig { returns T::Hash[String, T.untyped] }
       def to_h
         {
-          "storygraph" => {
-            "email" => @email,
-            "password" => @password,
-            "username" => @username,
-          },
+          "storygraph" => { "email" => @email, "password" => @password, "username" => @username },
         }
       end
 
