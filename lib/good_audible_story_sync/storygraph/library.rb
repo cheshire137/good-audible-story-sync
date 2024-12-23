@@ -9,15 +9,26 @@ module GoodAudibleStorySync
       sig { returns T::Array[Book] }
       attr_reader :books
 
-      sig { void }
-      def initialize
+      sig { params(total_books: T.nilable(Integer)).void }
+      def initialize(total_books: nil)
         @books = T.let([], T::Array[Book])
+        @total_books = total_books
         @loaded_from_file = T.let(false, T::Boolean)
       end
 
       sig { params(book: Book).void }
       def add_book(book)
         @books << book
+      end
+
+      sig { returns Integer }
+      def total_books
+        @total_books || @books.size
+      end
+
+      sig { returns String }
+      def book_units
+        total_books == 1 ? "book" : "books"
       end
 
       sig { params(file_path: String).returns(T::Boolean) }
@@ -45,7 +56,6 @@ module GoodAudibleStorySync
       def to_json
         JSON.pretty_generate(books.map(&:to_h))
       end
-
     end
   end
 end

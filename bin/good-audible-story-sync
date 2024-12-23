@@ -26,9 +26,7 @@ storygraph_auth = GoodAudibleStorySync::Storygraph::AuthFlow.run(
 )
 exit 1 unless storygraph_auth
 
-library_item = library.items.detect { |item| item.isbn }
-if library_item
-  storygraph_client = GoodAudibleStorySync::Storygraph::Client.new(auth: storygraph_auth)
-  storygraph_book = storygraph_client.find_by_isbn(library_item.isbn)
-  puts storygraph_book.inspect
-end
+storygraph_client = GoodAudibleStorySync::Storygraph::Client.new(auth: storygraph_auth)
+storygraph_library = storygraph_client.get_read_books
+puts "Found #{storygraph_library.total_books} read #{storygraph_library.book_units} on Storygraph"
+storygraph_library.save_to_file(options.storygraph_file)

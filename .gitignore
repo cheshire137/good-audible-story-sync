@@ -1,5 +1,6 @@
 credentials*.txt
 audible_library.json
+storygraph_data.json
 *.gem
 *.rbc
 /.config
