@@ -162,6 +162,7 @@ module GoodAudibleStorySync
         else
           refresh_token
           response = make_request.call
+          process_headers&.call(response.headers)
           handle_json_response(action: action, response: response)
         end
       end
