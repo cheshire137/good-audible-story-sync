@@ -15,17 +15,17 @@ module GoodAudibleStorySync
     DEFAULT_EXPIRATION_DAYS = 1
     DEFAULT_DATABASE_FILE = "good_audible_story_sync.db"
 
-    # sig { params(script_name: String, cipher: Util::Cipher, argv: Array).returns(Options) }
-    def self.parse(script_name:, cipher:, argv: ARGV)
+    # sig { params(script_name: String, cipher: T.nilable(Util::Cipher), argv: Array).returns(Options) }
+    def self.parse(script_name:, cipher: nil, argv: ARGV)
       puts "#{EMOJI_PREFIX} Parsing options..."
       new(script_name: script_name, cipher: cipher, argv: argv).parse
     end
 
-    # sig { params(script_name: String, cipher: Util::Cipher, argv: Array).void }
-    def initialize(script_name:, cipher:, argv: ARGV)
+    # sig { params(script_name: String, cipher: T.nilable(Util::Cipher), argv: Array).void }
+    def initialize(script_name:, cipher: nil, argv: ARGV)
       @options = {}
       @argv = argv
-      @cipher = cipher
+      @cipher = cipher || Util::Cipher.new
       @option_parser = OptionParser.new do |opts|
         opts.banner = "Usage: #{script_name} [options]"
         opts.on(

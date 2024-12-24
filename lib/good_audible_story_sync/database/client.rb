@@ -12,10 +12,10 @@ module GoodAudibleStorySync
       sig { returns Util::Cipher }
       attr_reader :cipher
 
-      sig { params(options: Options, cipher: Util::Cipher).void }
-      def initialize(options:, cipher:)
-        @db = SQLite3::Database.new(options.database_file)
-        @cipher = cipher
+      sig { params(db_file: String, cipher: T.nilable(Util::Cipher)).void }
+      def initialize(db_file:, cipher: nil)
+        @db = SQLite3::Database.new(db_file)
+        @cipher = cipher || Util::Cipher.new
         @credentials = Credentials.new(db_client: self)
         @audible_books = AudibleBooks.new(db: @db)
         @storygraph_books = StorygraphBooks.new(db: @db)
