@@ -5,8 +5,10 @@ require_relative "../lib/good_audible_story_sync"
 
 cipher = GoodAudibleStorySync::Util::Cipher.new
 options = GoodAudibleStorySync::Options.parse(script_name: __FILE__, cipher: cipher)
-db_client = GoodAudibleStorySync::Database::Client.new(db_file: options.database_file, cipher: cipher)
-db_client.create_tables
+db_client = GoodAudibleStorySync::Database::Client.setup(
+  db_file: options.database_file,
+  cipher: cipher,
+)
 
 audible_auth = GoodAudibleStorySync::Audible::AuthFlow.run(db_client: db_client)
 exit 1 if audible_auth.nil?
