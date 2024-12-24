@@ -1,6 +1,7 @@
 credentials*.txt
 audible_library.json
 storygraph_data.json
+good_audible_story_sync.db
 *.gem
 *.rbc
 /.config
