@@ -21,7 +21,7 @@ module GoodAudibleStorySync
       sig { params(credentials_file: Util::EncryptedJsonFile, db_client: Database::Client).void }
       def initialize(credentials_file:, db_client:)
         @credentials_file = credentials_file
-        @credentials_db = Database::Credentials.new(db_client: db_client)
+        @credentials_db = db_client.credentials
       end
 
       sig { returns T.nilable(Auth) }
