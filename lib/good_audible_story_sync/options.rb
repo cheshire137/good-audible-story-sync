@@ -15,16 +15,17 @@ module GoodAudibleStorySync
     DEFAULT_EXPIRATION_DAYS = 1
     DEFAULT_DATABASE_FILE = "good_audible_story_sync.db"
 
-    # sig { params(script_name: String, argv: Array).returns(Options) }
-    def self.parse(script_name:, argv: ARGV)
+    # sig { params(script_name: String, cipher: Util::Cipher, argv: Array).returns(Options) }
+    def self.parse(script_name:, cipher:, argv: ARGV)
       puts "#{EMOJI_PREFIX} Parsing options..."
-      new(script_name: script_name, argv: argv).parse
+      new(script_name: script_name, cipher: cipher, argv: argv).parse
     end
 
-    # sig { params(script_name: String, argv: Array).void }
-    def initialize(script_name:, argv: ARGV)
+    # sig { params(script_name: String, cipher: Util::Cipher, argv: Array).void }
+    def initialize(script_name:, cipher:, argv: ARGV)
       @options = {}
       @argv = argv
+      @cipher = cipher
       @option_parser = OptionParser.new do |opts|
         opts.banner = "Usage: #{script_name} [options]"
         opts.on(
@@ -91,7 +92,7 @@ module GoodAudibleStorySync
       def credentials_file
         return @credentials_file if @credentials_file
         path = @options[:"credentials-file"] || DEFAULT_CREDENTIALS_FILE
-        @credentials_file = Util::EncryptedJsonFile.new(path: path)
+        @credentials_file = Util::EncryptedJsonFile.new(path: path, cipher: @cipher)
       end
 
       # sig { returns String }

@@ -6,10 +6,17 @@ module GoodAudibleStorySync
     class Client
       extend T::Sig
 
-      sig { params(options: Options).void }
-      def initialize(options:)
+      sig { returns SQLite3::Database }
+      attr_reader :db
+
+      sig { returns Util::Cipher }
+      attr_reader :cipher
+
+      sig { params(options: Options, cipher: Util::Cipher).void }
+      def initialize(options:, cipher:)
         @db = SQLite3::Database.new(options.database_file)
-        @credentials = Credentials.new(db: @db)
+        @cipher = cipher
+        @credentials = Credentials.new(db_client: self)
         @audible_book = AudibleBook.new(db: @db)
         @storygraph_book = StorygraphBook.new(db: @db)
       end

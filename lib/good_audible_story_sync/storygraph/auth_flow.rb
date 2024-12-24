@@ -8,29 +8,58 @@ module GoodAudibleStorySync
     class AuthFlow
       extend T::Sig
 
-      sig { params(credentials_file: Util::EncryptedJsonFile).returns(T.nilable(Auth)) }
-      def self.run(credentials_file:)
-        new(credentials_file: credentials_file).run
+      sig do
+        params(
+          credentials_file: Util::EncryptedJsonFile,
+          db_client: Database::Client
+        ).returns(T.nilable(Auth))
+      end
+      def self.run(credentials_file:, db_client:)
+        new(credentials_file: credentials_file, db_client: db_client).run
       end
 
-      sig { params(credentials_file: Util::EncryptedJsonFile).void }
-      def initialize(credentials_file:)
+      sig { params(credentials_file: Util::EncryptedJsonFile, db_client: Database::Client).void }
+      def initialize(credentials_file:, db_client:)
         @credentials_file = credentials_file
+        @credentials_db = Database::Credentials.new(db_client: db_client)
       end
 
       sig { returns T.nilable(Auth) }
       def run
-        if @credentials_file.exists? && @credentials_file.load["storygraph"]
-          load_from_file
-        else
-          log_in_via_website
-        end
+        auth_from_db = load_from_database
+        return auth_from_db if auth_from_db
+
+        can_load_from_file? ? load_from_file : log_in_via_website
       rescue Auth::AuthError
         puts "Failed to sign in to Storygraph."
         nil
       end
 
       private
+
+      sig { returns T.nilable(Auth) }
+      def load_from_database
+        auth = Auth.new
+        puts "#{Util::INFO_EMOJI} Looking for saved Storygraph credentials in database..."
+        success = auth.load_from_database(@credentials_db)
+        puts "#{Util::SUCCESS_EMOJI} Found saved Storygraph credentials." if success
+        return nil unless success
+
+        begin
+          auth.sign_in
+        rescue Auth::AuthError => err
+          puts "#{Util::ERROR_EMOJI} Failed to sign in to Storygraph: #{err.message}"
+          return nil
+        end
+
+        auth
+      end
+
+      sig { returns T::Boolean }
+      def can_load_from_file?
+        return false unless @credentials_file.exists?
+        @credentials_file.load.key?("storygraph")
+      end
 
       sig { returns T.nilable(Auth) }
       def load_from_file
@@ -51,6 +80,7 @@ module GoodAudibleStorySync
         end
 
         puts "Restored auth with Storygraph as #{auth.username}"
+        auth.save_to_database(@credentials_db)
         auth
       end
 

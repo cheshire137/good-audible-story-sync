@@ -37,7 +37,6 @@ module GoodAudibleStorySync
         @email = data["email"]
         @password = data["password"]
         @username = data["username"]
-        @loaded_from_file = T.let(false, T::Boolean)
       end
 
       sig { void }
@@ -66,10 +65,30 @@ module GoodAudibleStorySync
         }
       end
 
+      sig { params(cred_client: Database::Credentials).void }
+      def save_to_database(cred_client)
+        cred_client.upsert(key: "storygraph", value: to_h)
+      end
+
       sig { params(encrypted_file: Util::EncryptedJsonFile).returns(T::Boolean) }
       def save_to_file(encrypted_file)
         bytes_written = encrypted_file.merge(to_h)
         bytes_written > 0
+      end
+
+      sig { params(cred_client: Database::Credentials).returns(T::Boolean) }
+      def load_from_database(cred_client)
+        storygraph_data = cred_client.find(key: "storygraph")
+        unless storygraph_data
+          puts "#{Util::INFO_EMOJI} No Storygraph credentials found in database"
+          return false
+        end
+
+        @email = storygraph_data["email"]
+        @password = storygraph_data["password"]
+        @username = storygraph_data["username"]
+
+        true
       end
 
       sig { params(encrypted_file: Util::EncryptedJsonFile).returns(T::Boolean) }
@@ -83,7 +102,7 @@ module GoodAudibleStorySync
         @password = storygraph_data["password"]
         @username = storygraph_data["username"]
 
-        @loaded_from_file = true
+        true
       end
     end
   end

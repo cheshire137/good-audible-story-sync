@@ -8,20 +8,28 @@ module GoodAudibleStorySync
     class AuthFlow
       extend T::Sig
 
-      sig { params(credentials_file: Util::EncryptedJsonFile).returns(T.nilable(Auth)) }
-      def self.run(credentials_file:)
-        new(credentials_file: credentials_file).run
+      sig do
+        params(
+          credentials_file: Util::EncryptedJsonFile,
+          db_client: Database::Client
+        ).returns(T.nilable(Auth))
+      end
+      def self.run(credentials_file:, db_client:)
+        new(credentials_file: credentials_file, db_client: db_client).run
       end
 
-      sig { params(credentials_file: Util::EncryptedJsonFile).void }
-      def initialize(credentials_file:)
+      sig do
+        params(credentials_file: Util::EncryptedJsonFile, db_client: Database::Client).void
+      end
+      def initialize(credentials_file:, db_client:)
         @audible_auth = Auth.new
         @credentials_file = credentials_file
+        @credentials_db = Database::Credentials.new(db_client: db_client)
       end
 
       sig { returns T.nilable(Auth) }
       def run
-        success = credentials_file.exists? ? load_from_file : log_in_via_oauth
+        success = load_from_database || (credentials_file.exists? ? load_from_file : log_in_via_oauth)
         success ? audible_auth : nil
       end
 
@@ -34,10 +42,20 @@ module GoodAudibleStorySync
       attr_reader :credentials_file
 
       sig { returns T::Boolean }
+      def load_from_database
+        puts "#{Util::INFO_EMOJI} Looking for saved Audible credentials in database..."
+        success = audible_auth.load_from_database(@credentials_db)
+        puts "#{Util::SUCCESS_EMOJI} Found saved Audible credentials." if success
+        success
+      end
+
+      sig { returns T::Boolean }
       def load_from_file
         puts "#{Util::INFO_EMOJI} Found existing GoodAudibleStorySync credential " \
           "file #{credentials_file}, loading..."
-        audible_auth.load_from_file(credentials_file)
+        success = audible_auth.load_from_file(credentials_file)
+        audible_auth.save_to_database(@credentials_db) if success
+        success
       end
 
       sig { returns T::Boolean }

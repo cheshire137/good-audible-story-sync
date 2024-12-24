@@ -11,10 +11,10 @@ module GoodAudibleStorySync
       sig { returns String }
       attr_reader :path
 
-      sig { params(path: String).void }
-      def initialize(path:)
+      sig { params(path: String, cipher: Cipher).void }
+      def initialize(path:, cipher:)
         @path = path
-        @encrypted_file = EncryptedFile.new(path: path)
+        @encrypted_file = EncryptedFile.new(path: path, cipher: cipher)
         @loaded_contents = nil
       end
 
