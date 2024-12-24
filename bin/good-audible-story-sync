@@ -4,6 +4,8 @@
 require_relative "../lib/good_audible_story_sync"
 
 options = GoodAudibleStorySync::Options.parse(script_name: __FILE__)
+db_client = GoodAudibleStorySync::Database::Client.new(options: options)
+db_client.create_tables
 
 audible_auth = GoodAudibleStorySync::Audible::AuthFlow.run(credentials_file: options.credentials_file)
 exit 1 if audible_auth.nil?

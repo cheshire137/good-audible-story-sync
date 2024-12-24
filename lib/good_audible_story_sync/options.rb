@@ -13,6 +13,7 @@ module GoodAudibleStorySync
     DEFAULT_LIBRARY_FILE = "audible_library.json"
     DEFAULT_STORYGRAPH_FILE = "storygraph_data.json"
     DEFAULT_EXPIRATION_DAYS = 1
+    DEFAULT_DATABASE_FILE = "good_audible_story_sync.db"
 
     # sig { params(script_name: String, argv: Array).returns(Options) }
     def self.parse(script_name:, argv: ARGV)
@@ -26,6 +27,12 @@ module GoodAudibleStorySync
       @argv = argv
       @option_parser = OptionParser.new do |opts|
         opts.banner = "Usage: #{script_name} [options]"
+        opts.on(
+          "-d DATABASE_FILE",
+          "--database-file",
+          String,
+          "Path to Sqlite database file. Defaults to #{DEFAULT_DATABASE_FILE}.",
+        )
         opts.on(
           "-c CREDENTIALS_FILE",
           "--credentials-file",
@@ -73,6 +80,11 @@ module GoodAudibleStorySync
         end
 
         self
+      end
+
+      # sig { returns String }
+      def database_file
+        @database_file ||= @options[:"database-file"] || DEFAULT_DATABASE_FILE
       end
 
       # sig { returns Util::EncryptedJsonFile }
