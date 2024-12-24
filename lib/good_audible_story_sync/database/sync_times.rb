@@ -16,7 +16,7 @@ module GoodAudibleStorySync
       end
 
       sig { params(key: String).returns(T.nilable(DateTime)) }
-      def find(key:)
+      def find(key)
         puts "#{Util::INFO_EMOJI} Checking when #{key} was last synced..."
         timestamp_str = @db.get_first_value("SELECT timestamp FROM #{TABLE_NAME} WHERE key = ?", key)
         return unless timestamp_str

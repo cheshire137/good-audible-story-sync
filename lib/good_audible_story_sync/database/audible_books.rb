@@ -27,6 +27,10 @@ module GoodAudibleStorySync
         SQL
       end
 
+      def find_all
+        @db.execute("SELECT * FROM #{TABLE_NAME}")
+      end
+
       sig do
         params(
           isbn: String,

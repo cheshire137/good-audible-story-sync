@@ -10,18 +10,17 @@ module GoodAudibleStorySync
       extend T::Sig
 
       sig do
-        params(client: Client, options: Options, books_db: Database::AudibleBooks).returns(Library)
+        params(client: Client, options: Options, db_client: Database::Client).returns(Library)
       end
-      def self.load_with_finish_times(client:, options:, books_db:)
+      def self.load_with_finish_times(client:, options:, db_client:)
         load_finish_times = T.let(false, T::Boolean)
-        library_file = options.library_file
-        library_is_cached = File.exist?(library_file)
-        library_cache_last_modified = library_is_cached ? File.mtime(library_file) : nil
+        library_cache_last_modified = db_client.sync_times.find("audible_library")
+        library_is_cached = !library_cache_last_modified.nil?
         should_refresh_library = library_cache_last_modified &&
           library_cache_last_modified > options.refresh_cutoff_time
 
         if library_is_cached && should_refresh_library
-          library = load_from_file(library_file)
+          library = load_from_database(db_client.audible_books)
           load_finish_times = !library.any_finished_time_loaded?
         else
           if library_is_cached
@@ -35,18 +34,16 @@ module GoodAudibleStorySync
         if load_finish_times
           finish_times_by_asin = client.get_finish_times_by_asin
           library.populate_finish_times(finish_times_by_asin)
-          library.save_to_file(library_file)
+          library.save_to_database(db_client.audible_books)
         end
-
-        library.save_to_database(books_db)
 
         library
       end
 
-      sig { params(file_path: String).returns(Library) }
-      def self.load_from_file(file_path)
+      sig { params(books_db: Database::AudibleBooks).returns(Library) }
+      def self.load_from_database(books_db)
         library = new
-        library.load_from_file(file_path)
+        library.load_from_database(books_db)
         library
       end
 
@@ -56,7 +53,7 @@ module GoodAudibleStorySync
       sig { params(items: T::Array[LibraryItem]).void }
       def initialize(items: [])
         @items = items
-        @loaded_from_file = T.let(false, T::Boolean)
+        @loaded_from_database = T.let(false, T::Boolean)
       end
 
       sig { returns Integer }
@@ -80,30 +77,19 @@ module GoodAudibleStorySync
         total_saved
       end
 
-      sig { params(file_path: String).returns(T::Boolean) }
-      def save_to_file(file_path)
-        puts "#{Util::SAVE_EMOJI} Saving Audible library data to file #{file_path}..."
-        File.write(file_path, to_json)
-        File.exist?(file_path) && !File.empty?(file_path)
-      end
-
       sig { returns T::Boolean }
-      def loaded_from_file?
-        @loaded_from_file
+      def loaded_from_database?
+        @loaded_from_database
       end
 
-      sig { params(file_path: String).returns(T::Boolean) }
-      def load_from_file(file_path)
-        return false unless File.exist?(file_path)
-
-        puts "#{Util::INFO_EMOJI} Loading Audible library from #{file_path}..."
-        json_str = File.read(file_path)
-        return false if json_str.strip.empty?
+      sig { params(books_db: Database::AudibleBooks).returns(T::Boolean) }
+      def load_from_database(books_db)
+        puts "#{Util::INFO_EMOJI} Loading cached Audible library..."
 
         data = T.let(JSON.parse(json_str), T::Array[Hash])
         @items = data.map { |item_data| LibraryItem.new(item_data) }
 
-        @loaded_from_file = true
+        @loaded_from_database = true
       end
 
       sig { returns T::Boolean }
