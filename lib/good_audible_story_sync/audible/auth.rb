@@ -244,7 +244,10 @@ module GoodAudibleStorySync
         @device_private_key = audible_data["device_private_key"]
         @access_token = audible_data["access_token"]
         @refresh_token = audible_data["refresh_token"]
-        @expires = audible_data["expires"]
+        expires_str = audible_data["expires"]
+        @expires = if expires_str.is_a?(String) && expires_str.size > 0
+          Time.parse(expires_str)
+        end
         @website_cookies = audible_data["website_cookies"]
         @store_authentication_cookie = audible_data["store_authentication_cookie"]
         @device_info = audible_data["device_info"]
