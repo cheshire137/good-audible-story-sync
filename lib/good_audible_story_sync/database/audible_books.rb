@@ -38,7 +38,12 @@ module GoodAudibleStorySync
       end
       def upsert(isbn:, title:, author:, narrator:, finished_at:)
         puts "#{Util::INFO_EMOJI} Saving Audible book #{isbn}..."
-        values = [isbn, title, author, narrator, finished_at]
+        finished_at_str = if finished_at.respond_to?(:iso8601)
+          T.unsafe(finished_at).iso8601
+        else
+          finished_at
+        end
+        values = [isbn, title, author, narrator, finished_at_str]
         @db.execute("INSERT INTO #{TABLE_NAME} (isbn, title, author, narrator, finished_at) " \
           "VALUES (?, ?, ?, ?, ?) ON CONFLICT(isbn) DO UPDATE SET title=excluded.title, " \
           "author=excluded.author, narrator=excluded.narrator, " \

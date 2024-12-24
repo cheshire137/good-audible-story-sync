@@ -43,6 +43,15 @@ module GoodAudibleStorySync
         @authors = hashes.map { |hash| hash["name"] }
       end
 
+      sig { params(db_client: Database::AudibleBooks).returns(T::Boolean) }
+      def save_to_database(db_client)
+        isbn = self.isbn
+        return false unless isbn
+        db_client.upsert(isbn: isbn, title: title, author: Util.join_words(authors),
+          narrator: Util.join_words(narrators), finished_at: finished_at)
+        true
+      end
+
       sig { returns T.nilable(String) }
       def title
         @data["title"]

@@ -9,8 +9,10 @@ module GoodAudibleStorySync
     class Library
       extend T::Sig
 
-      sig { params(client: Client, options: Options).returns(Library) }
-      def self.load_with_finish_times(client:, options:)
+      sig do
+        params(client: Client, options: Options, books_db: Database::AudibleBooks).returns(Library)
+      end
+      def self.load_with_finish_times(client:, options:, books_db:)
         load_finish_times = T.let(false, T::Boolean)
         library_file = options.library_file
         library_is_cached = File.exist?(library_file)
@@ -36,6 +38,8 @@ module GoodAudibleStorySync
           library.save_to_file(library_file)
         end
 
+        library.save_to_database(books_db)
+
         library
       end
 
@@ -58,6 +62,22 @@ module GoodAudibleStorySync
       sig { returns Integer }
       def total_items
         items.size
+      end
+
+      sig { params(db_client: Database::AudibleBooks).returns(Integer) }
+      def save_to_database(db_client)
+        puts "#{Util::SAVE_EMOJI} Caching Audible library in database..."
+        total_saved = 0
+        items.each do |library_item|
+          isbn = library_item.isbn
+          if isbn
+            success = library_item.save_to_database(db_client)
+            total_saved += 1 if success
+          else
+            puts "#{Util::TAB}#{Util::WARNING_EMOJI} Skipping book with no ISBN: #{library_item.title}"
+          end
+        end
+        total_saved
       end
 
       sig { params(file_path: String).returns(T::Boolean) }
