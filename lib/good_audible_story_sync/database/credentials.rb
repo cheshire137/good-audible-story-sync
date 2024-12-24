@@ -6,6 +6,8 @@ module GoodAudibleStorySync
     class Credentials
       extend T::Sig
 
+      TABLE_NAME = "credentials"
+
       sig { params(db_client: Database::Client).void }
       def initialize(db_client:)
         @db = T.let(db_client.db, SQLite3::Database)
@@ -14,7 +16,8 @@ module GoodAudibleStorySync
 
       sig { params(key: String).returns(T.nilable(T::Hash[String, T.untyped])) }
       def find(key:)
-        encrypted_value = @db.get_first_value("SELECT value FROM credentials WHERE key = ?", key)
+        puts "#{Util::INFO_EMOJI} Looking for '#{key}' credentials..."
+        encrypted_value = @db.get_first_value("SELECT value FROM #{TABLE_NAME} WHERE key = ?", key)
         return unless encrypted_value
 
         value = @cipher.decrypt(encrypted_value)
@@ -23,9 +26,9 @@ module GoodAudibleStorySync
 
       sig { void }
       def create_table
-        puts "#{Util::INFO_EMOJI} Ensuring table credentials exists..."
+        puts "#{Util::INFO_EMOJI} Ensuring table #{TABLE_NAME} exists..."
         @db.execute <<~SQL
-          CREATE TABLE IF NOT EXISTS credentials (
+          CREATE TABLE IF NOT EXISTS #{TABLE_NAME} (
             key TEXT PRIMARY KEY,
             value BLOB NOT NULL
           );
@@ -37,7 +40,7 @@ module GoodAudibleStorySync
         encrypted_value = @cipher.encrypt(value.to_json)
         values = [key, encrypted_value]
         puts "#{Util::INFO_EMOJI} Saving '#{key}' credentials..."
-        @db.execute("INSERT INTO credentials (key, value) VALUES (?, ?) " \
+        @db.execute("INSERT INTO #{TABLE_NAME} (key, value) VALUES (?, ?) " \
           "ON CONFLICT(key) DO UPDATE SET value=excluded.value", values)
       end
 

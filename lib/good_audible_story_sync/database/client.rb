@@ -17,15 +17,15 @@ module GoodAudibleStorySync
         @db = SQLite3::Database.new(options.database_file)
         @cipher = cipher
         @credentials = Credentials.new(db_client: self)
-        @audible_book = AudibleBook.new(db: @db)
-        @storygraph_book = StorygraphBook.new(db: @db)
+        @audible_books = AudibleBooks.new(db: @db)
+        @storygraph_books = StorygraphBooks.new(db: @db)
       end
 
       sig { void }
       def create_tables
         puts "#{Util::INFO_EMOJI} Creating database tables..."
-        @audible_book.create_table
-        @storygraph_book.create_table
+        @audible_books.create_table
+        @storygraph_books.create_table
         @credentials.create_table
       end
     end

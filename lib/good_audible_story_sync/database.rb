@@ -8,7 +8,7 @@ module GoodAudibleStorySync
   end
 end
 
-require_relative "database/audible_book"
+require_relative "database/audible_books"
 require_relative "database/client"
 require_relative "database/credentials"
-require_relative "database/storygraph_book"
+require_relative "database/storygraph_books"
