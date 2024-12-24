@@ -43,25 +43,6 @@ module GoodAudibleStorySync
         @db.execute("INSERT INTO #{TABLE_NAME} (key, value) VALUES (?, ?) " \
           "ON CONFLICT(key) DO UPDATE SET value=excluded.value", values)
       end
-
-      sig { params(encrypted_file: Util::EncryptedJsonFile).returns(T::Boolean) }
-      def upsert_from_file(encrypted_file)
-        return false unless encrypted_file.exists?
-
-        data = encrypted_file.load
-
-        audible_data = (data.key?("audible") ? data["audible"] : data) || {}
-        audible_value = audible_data.slice("adp_token", "device_private_key", "access_token",
-          "refresh_token", "expires", "website_cookies", "store_authentication_cookie",
-          "device_info", "customer_info")
-        upsert(key: "audible", value: audible_value)
-
-        storygraph_data = data["storygraph"] || {}
-        storygraph_value = storygraph_data.slice("email", "password", "username")
-        upsert(key: "storygraph", value: storygraph_value)
-
-        true
-      end
     end
   end
 end

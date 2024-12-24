@@ -9,7 +9,6 @@ module GoodAudibleStorySync
     extend T::Sig
 
     EMOJI_PREFIX = "⚙️"
-    DEFAULT_CREDENTIALS_FILE = "credentials.txt"
     DEFAULT_LIBRARY_FILE = "audible_library.json"
     DEFAULT_STORYGRAPH_FILE = "storygraph_data.json"
     DEFAULT_EXPIRATION_DAYS = 1
@@ -33,13 +32,6 @@ module GoodAudibleStorySync
           "--database-file",
           String,
           "Path to Sqlite database file. Defaults to #{DEFAULT_DATABASE_FILE}.",
-        )
-        opts.on(
-          "-c CREDENTIALS_FILE",
-          "--credentials-file",
-          String,
-          "Path to file that will store encrypted credentials. Defaults to " \
-            "#{DEFAULT_CREDENTIALS_FILE}.",
         )
         opts.on(
           "-l LIBRARY_FILE",
@@ -68,12 +60,6 @@ module GoodAudibleStorySync
       def parse
         @option_parser.parse!(@argv, into: @options)
 
-        if credentials_file == DEFAULT_CREDENTIALS_FILE
-          puts "#{Util::TAB}Using default credentials file"
-        else
-          puts "#{Util::TAB}Using credentials file #{credentials_file}"
-        end
-
         if library_file == DEFAULT_LIBRARY_FILE
           puts "#{Util::TAB}Using default library file"
         else
@@ -86,13 +72,6 @@ module GoodAudibleStorySync
       # sig { returns String }
       def database_file
         @database_file ||= @options[:"database-file"] || DEFAULT_DATABASE_FILE
-      end
-
-      # sig { returns Util::EncryptedJsonFile }
-      def credentials_file
-        return @credentials_file if @credentials_file
-        path = @options[:"credentials-file"] || DEFAULT_CREDENTIALS_FILE
-        @credentials_file = Util::EncryptedJsonFile.new(path: path, cipher: @cipher)
       end
 
       # sig { returns String }

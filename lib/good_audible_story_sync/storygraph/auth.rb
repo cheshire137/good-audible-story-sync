@@ -2,7 +2,6 @@
 # typed: true
 
 require "mechanize"
-require_relative "../util/encrypted_file"
 
 module GoodAudibleStorySync
   module Storygraph
@@ -70,12 +69,6 @@ module GoodAudibleStorySync
         cred_client.upsert(key: "storygraph", value: to_h)
       end
 
-      sig { params(encrypted_file: Util::EncryptedJsonFile).returns(T::Boolean) }
-      def save_to_file(encrypted_file)
-        bytes_written = encrypted_file.merge(to_h)
-        bytes_written > 0
-      end
-
       sig { params(cred_client: Database::Credentials).returns(T::Boolean) }
       def load_from_database(cred_client)
         storygraph_data = cred_client.find(key: "storygraph")
@@ -84,20 +77,6 @@ module GoodAudibleStorySync
           return false
         end
 
-        @email = storygraph_data["email"]
-        @password = storygraph_data["password"]
-        @username = storygraph_data["username"]
-
-        true
-      end
-
-      sig { params(encrypted_file: Util::EncryptedJsonFile).returns(T::Boolean) }
-      def load_from_file(encrypted_file)
-        return false unless encrypted_file.exists?
-
-        data = encrypted_file.load
-
-        storygraph_data = data["storygraph"]
         @email = storygraph_data["email"]
         @password = storygraph_data["password"]
         @username = storygraph_data["username"]

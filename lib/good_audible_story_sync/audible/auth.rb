@@ -97,7 +97,6 @@ module GoodAudibleStorySync
         @store_authentication_cookie = nil
         @device_info = nil
         @customer_info = nil
-        @loaded_from_file = T.let(false, T::Boolean)
         @loaded_from_database = T.let(false, T::Boolean)
       end
 
@@ -228,17 +227,6 @@ module GoodAudibleStorySync
         cred_client.upsert(key: "audible", value: to_h)
       end
 
-      sig { params(encrypted_file: Util::EncryptedJsonFile).returns(T::Boolean) }
-      def save_to_file(encrypted_file)
-        bytes_written = encrypted_file.merge(to_h)
-        bytes_written > 0
-      end
-
-      sig { returns T::Boolean }
-      def loaded_from_file?
-        @loaded_from_file
-      end
-
       sig { returns T::Boolean }
       def loaded_from_database?
         @loaded_from_database
@@ -263,29 +251,6 @@ module GoodAudibleStorySync
         @customer_info = audible_data["customer_info"]
 
         @loaded_from_database = true
-      end
-
-      sig { params(encrypted_file: Util::EncryptedJsonFile).returns(T::Boolean) }
-      def load_from_file(encrypted_file)
-        return false unless encrypted_file.exists?
-
-        data = encrypted_file.load
-
-        audible_data = data.key?("audible") ? data["audible"] : data
-        @adp_token = audible_data["adp_token"]
-        @device_private_key = audible_data["device_private_key"]
-        @access_token = audible_data["access_token"]
-        @refresh_token = audible_data["refresh_token"]
-        expires_str = audible_data["expires"]
-        @expires = if expires_str.is_a?(String) && expires_str.size > 0
-          Time.parse(expires_str)
-        end
-        @website_cookies = audible_data["website_cookies"]
-        @store_authentication_cookie = audible_data["store_authentication_cookie"]
-        @device_info = audible_data["device_info"]
-        @customer_info = audible_data["customer_info"]
-
-        @loaded_from_file = true
       end
 
       private

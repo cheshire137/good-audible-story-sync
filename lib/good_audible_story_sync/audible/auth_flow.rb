@@ -8,28 +8,20 @@ module GoodAudibleStorySync
     class AuthFlow
       extend T::Sig
 
-      sig do
-        params(
-          credentials_file: Util::EncryptedJsonFile,
-          db_client: Database::Client
-        ).returns(T.nilable(Auth))
-      end
-      def self.run(credentials_file:, db_client:)
-        new(credentials_file: credentials_file, db_client: db_client).run
+      sig { params(db_client: Database::Client).returns(T.nilable(Auth)) }
+      def self.run(db_client:)
+        new(db_client: db_client).run
       end
 
-      sig do
-        params(credentials_file: Util::EncryptedJsonFile, db_client: Database::Client).void
-      end
-      def initialize(credentials_file:, db_client:)
+      sig { params(db_client: Database::Client).void }
+      def initialize(db_client:)
         @audible_auth = Auth.new
-        @credentials_file = credentials_file
         @credentials_db = db_client.credentials
       end
 
       sig { returns T.nilable(Auth) }
       def run
-        success = load_from_database || (credentials_file.exists? ? load_from_file : log_in_via_oauth)
+        success = load_from_database || log_in_via_oauth
         success ? audible_auth : nil
       end
 
@@ -37,9 +29,6 @@ module GoodAudibleStorySync
 
       sig { returns Auth }
       attr_reader :audible_auth
-
-      sig { returns Util::EncryptedJsonFile }
-      attr_reader :credentials_file
 
       sig { returns T::Boolean }
       def load_from_database
@@ -50,18 +39,7 @@ module GoodAudibleStorySync
       end
 
       sig { returns T::Boolean }
-      def load_from_file
-        puts "#{Util::INFO_EMOJI} Found existing GoodAudibleStorySync credential " \
-          "file #{credentials_file}, loading..."
-        success = audible_auth.load_from_file(credentials_file)
-        audible_auth.save_to_database(@credentials_db) if success
-        success
-      end
-
-      sig { returns T::Boolean }
       def log_in_via_oauth
-        puts "#{Util::INFO_EMOJI} GoodAudibleStorySync credential file #{credentials_file} " \
-          "does not yet exist"
         puts "Please authenticate with Audible via: #{audible_auth.oauth_url}"
         puts "\nEnter the URL you were redirected to after logging in:"
         url_after_login = gets.chomp
@@ -84,8 +62,8 @@ module GoodAudibleStorySync
         puts "\n#{Util::SUCCESS_EMOJI} Successfully authenticated with Audible and " \
           "registered device: #{device_name}"
 
-        puts "#{Util::SAVE_EMOJI} Saving Audible credentials to #{credentials_file}..."
-        audible_auth.save_to_file(credentials_file)
+        audible_auth.save_to_database(@credentials_db)
+        true
       end
     end
   end

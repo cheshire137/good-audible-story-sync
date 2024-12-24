@@ -8,15 +8,13 @@ options = GoodAudibleStorySync::Options.parse(script_name: __FILE__, cipher: cip
 db_client = GoodAudibleStorySync::Database::Client.new(db_file: options.database_file, cipher: cipher)
 db_client.create_tables
 
-audible_auth = GoodAudibleStorySync::Audible::AuthFlow.run(
-  credentials_file: options.credentials_file,
-  db_client: db_client,
-)
+audible_auth = GoodAudibleStorySync::Audible::AuthFlow.run(db_client: db_client)
 exit 1 if audible_auth.nil?
 
-audible_client = GoodAudibleStorySync::Audible::Client.new(auth: audible_auth, options: options)
+audible_client = GoodAudibleStorySync::Audible::Client.new(auth: audible_auth, options: options,
+  credentials_db: db_client.credentials)
 
-unless audible_auth.loaded_from_file? || audible_auth.loaded_from_database?
+unless audible_auth.loaded_from_database?
   puts "#{GoodAudibleStorySync::Util::INFO_EMOJI} Getting Audible user profile..."
   user_profile = audible_client.get_user_profile
   puts user_profile.to_s(indent_level: 1)
@@ -27,10 +25,7 @@ library = GoodAudibleStorySync::Audible::Library.load_with_finish_times(client: 
 puts library.to_s
 
 puts "\n#{GoodAudibleStorySync::Util::INFO_EMOJI} Logging in to Storygraph..."
-storygraph_auth = GoodAudibleStorySync::Storygraph::AuthFlow.run(
-  credentials_file: options.credentials_file,
-  db_client: db_client,
-)
+storygraph_auth = GoodAudibleStorySync::Storygraph::AuthFlow.run(db_client: db_client)
 exit 1 unless storygraph_auth
 
 storygraph_client = GoodAudibleStorySync::Storygraph::Client.new(auth: storygraph_auth)
