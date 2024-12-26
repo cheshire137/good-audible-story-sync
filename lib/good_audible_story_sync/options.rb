@@ -10,7 +10,6 @@ module GoodAudibleStorySync
 
     EMOJI_PREFIX = "⚙️"
     DEFAULT_EXPIRATION_DAYS = 1
-    DEFAULT_DATABASE_FILE = "good_audible_story_sync.db"
 
     # sig { params(script_name: String, cipher: T.nilable(Util::Cipher), argv: Array).returns(Options) }
     def self.parse(script_name:, cipher: nil, argv: ARGV)
@@ -29,7 +28,7 @@ module GoodAudibleStorySync
           "-d DATABASE_FILE",
           "--database-file",
           String,
-          "Path to Sqlite database file. Defaults to #{DEFAULT_DATABASE_FILE}.",
+          "Path to Sqlite database file. Defaults to #{Database::Client::DEFAULT_DATABASE_FILE}.",
         )
         opts.on(
           "-e EXPIRATION_DAYS",
@@ -48,7 +47,7 @@ module GoodAudibleStorySync
 
       # sig { returns String }
       def database_file
-        @database_file ||= @options[:"database-file"] || DEFAULT_DATABASE_FILE
+        @database_file ||= @options[:"database-file"] || Database::Client::DEFAULT_DATABASE_FILE
       end
 
       # sig { returns Integer }

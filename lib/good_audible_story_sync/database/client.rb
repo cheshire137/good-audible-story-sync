@@ -6,8 +6,10 @@ module GoodAudibleStorySync
     class Client
       extend T::Sig
 
+      DEFAULT_DATABASE_FILE = "good_audible_story_sync.db"
+
       sig { params(db_file: String, cipher: T.nilable(Util::Cipher)).returns(Client) }
-      def self.setup(db_file, cipher: nil)
+      def self.load(db_file = DEFAULT_DATABASE_FILE, cipher: nil)
         client = new(db_file: db_file, cipher: cipher)
         client.create_tables
         client
@@ -41,7 +43,7 @@ module GoodAudibleStorySync
       attr_reader :sync_times
 
       sig { params(db_file: String, cipher: T.nilable(Util::Cipher)).void }
-      def initialize(db_file:, cipher: nil)
+      def initialize(db_file: DEFAULT_DATABASE_FILE, cipher: nil)
         @db = SQLite3::Database.new(db_file)
         @db.results_as_hash = true
         @cipher = cipher || Util::Cipher.new
