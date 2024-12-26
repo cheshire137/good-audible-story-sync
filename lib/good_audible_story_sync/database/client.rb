@@ -34,6 +34,7 @@ module GoodAudibleStorySync
       sig { params(db_file: String, cipher: T.nilable(Util::Cipher)).void }
       def initialize(db_file:, cipher: nil)
         @db = SQLite3::Database.new(db_file)
+        @db.results_as_hash = true
         @cipher = cipher || Util::Cipher.new
         @credentials = Credentials.new(db_client: self)
         @audible_books = AudibleBooks.new(db: @db)

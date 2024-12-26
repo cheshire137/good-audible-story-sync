@@ -20,7 +20,7 @@ unless audible_auth.loaded_from_database?
 end
 
 library = GoodAudibleStorySync::Audible::Library.load_with_finish_times(client: audible_client,
-  options: options, books_db: db_client.audible_books)
+  options: options, db_client: db_client)
 puts library.to_s
 
 puts "\n#{GoodAudibleStorySync::Util::INFO_EMOJI} Logging in to Storygraph..."

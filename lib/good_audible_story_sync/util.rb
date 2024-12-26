@@ -27,6 +27,11 @@ module GoodAudibleStorySync
       end
     end
 
+    sig { params(words_str: String).returns(T::Array[String]) }
+    def self.split_words(words_str)
+      words_str.split(/, | and/).map { |word| word.strip.sub(/^and /, "") }
+    end
+
     sig { params(timestamp: T.any(DateTime, Time)).returns(String) }
     def self.pretty_time(timestamp)
       # e.g., "Fri November 29, 2024 at 2:47am"

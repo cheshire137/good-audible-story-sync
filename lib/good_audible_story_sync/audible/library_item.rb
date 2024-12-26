@@ -32,15 +32,25 @@ module GoodAudibleStorySync
       sig { returns T::Array[String] }
       def narrators
         return @narrators if @narrators
-        hashes = @data["narrators"] || []
-        @narrators = hashes.map { |hash| hash["name"] }
+        narrator_str = T.let(@data["narrator"], T.nilable(String))
+        if narrator_str # data from database
+          @narrators = Util.split_words(narrator_str)
+        else # data from Audible API
+          hashes = @data["narrators"] || []
+          @narrators = hashes.map { |hash| hash["name"] }
+        end
       end
 
       sig { returns T::Array[String] }
       def authors
         return @authors if @authors
-        hashes = @data["authors"] || []
-        @authors = hashes.map { |hash| hash["name"] }
+        author_str = T.let(@data["author"], T.nilable(String))
+        if author_str # data from database
+          @authors = Util.split_words(author_str)
+        else # data from Audible API
+          hashes = @data["authors"] || []
+          @authors = hashes.map { |hash| hash["name"] }
+        end
       end
 
       sig { params(db_client: Database::AudibleBooks).returns(T::Boolean) }

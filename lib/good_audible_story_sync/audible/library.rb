@@ -86,8 +86,8 @@ module GoodAudibleStorySync
       def load_from_database(books_db)
         puts "#{Util::INFO_EMOJI} Loading cached Audible library..."
 
-        data = T.let(JSON.parse(json_str), T::Array[Hash])
-        @items = data.map { |item_data| LibraryItem.new(item_data) }
+        rows = books_db.find_all
+        @items = rows.map { |row| LibraryItem.new(row) }
 
         @loaded_from_database = true
       end
