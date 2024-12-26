@@ -112,10 +112,21 @@ module GoodAudibleStorySync
       sig { params(indent_level: Integer).returns(String) }
       def to_s(indent_level: 0)
         lines = [
-          "#{Util::TAB * indent_level}#{title} by #{author}",
+          "#{Util::TAB * indent_level}#{title_and_author}",
           "#{Util::TAB * (indent_level + 1)}#{Util::NEWLINE_EMOJI} #{url}",
         ]
         lines.join("\n")
+      end
+
+      sig { returns String }
+      def title_and_author
+        return @title_and_author if @title_and_author
+        author = self.author
+        @title_and_author = if author && !author.empty?
+          "#{title} by #{author}"
+        else
+          title || "Unknown (ID #{id})"
+        end
       end
 
       sig { returns String }
