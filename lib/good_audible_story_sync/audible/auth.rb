@@ -154,7 +154,7 @@ module GoodAudibleStorySync
             "app_version" => "3.56.2",
             "device_serial" => device_serial,
             "device_type" => "A2CZJZGLK2JJVM",
-            "device_name" => "%FIRST_NAME%%FIRST_NAME_POSSESSIVE_STRING%%DUPE_STRATEGY_1ST%Audible for iPhone",
+            "device_name" => "GoodAudibleStorySync",
             "os_version" => "15.0.0",
             "software_version" => "35602678",
             "device_model" => "iPhone",
