@@ -9,7 +9,6 @@ module GoodAudibleStorySync
     extend T::Sig
 
     EMOJI_PREFIX = "⚙️"
-    DEFAULT_LIBRARY_FILE = "audible_library.json"
     DEFAULT_STORYGRAPH_FILE = "storygraph_data.json"
     DEFAULT_EXPIRATION_DAYS = 1
     DEFAULT_DATABASE_FILE = "good_audible_story_sync.db"
@@ -34,13 +33,6 @@ module GoodAudibleStorySync
           "Path to Sqlite database file. Defaults to #{DEFAULT_DATABASE_FILE}.",
         )
         opts.on(
-          "-l LIBRARY_FILE",
-          "--library-file",
-          String,
-          "Path to file that will store info about items in your Audible library. Defaults to " \
-            "#{DEFAULT_LIBRARY_FILE}.",
-        )
-        opts.on(
           "-e EXPIRATION_DAYS",
           "--expiration-days",
           Integer,
@@ -59,24 +51,12 @@ module GoodAudibleStorySync
       # sig { returns Options }
       def parse
         @option_parser.parse!(@argv, into: @options)
-
-        if library_file == DEFAULT_LIBRARY_FILE
-          puts "#{Util::TAB}Using default library file"
-        else
-          puts "#{Util::TAB}Using library file #{library_file}"
-        end
-
         self
       end
 
       # sig { returns String }
       def database_file
         @database_file ||= @options[:"database-file"] || DEFAULT_DATABASE_FILE
-      end
-
-      # sig { returns String }
-      def library_file
-        @library_file ||= @options[:"library-file"] || DEFAULT_LIBRARY_FILE
       end
 
       # sig { returns String }
