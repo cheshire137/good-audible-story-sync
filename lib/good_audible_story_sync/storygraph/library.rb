@@ -6,6 +6,8 @@ module GoodAudibleStorySync
     class Library
       extend T::Sig
 
+      SYNC_TIME_KEY = "storygraph_library"
+
       sig { returns T::Array[Book] }
       attr_reader :books
 
@@ -43,6 +45,24 @@ module GoodAudibleStorySync
         data.each { |item_data| add_book(Book.new(item_data)) }
 
         @loaded_from_file = true
+      end
+
+      sig { params(db_client: Database::Client).returns(Integer) }
+      def save_to_database(db_client)
+        puts "#{Util::SAVE_EMOJI} Caching Storygraph library in database..."
+        total_saved = 0
+        books_db = db_client.storygraph_books
+        books.each do |book|
+          id = book.id
+          if id
+            success = book.save_to_database(books_db)
+            total_saved += 1 if success
+          else
+            puts "#{Util::TAB}#{Util::WARNING_EMOJI} Skipping book with no ID: #{book}"
+          end
+        end
+        db_client.sync_times.touch(SYNC_TIME_KEY)
+        total_saved
       end
 
       sig { params(file_path: String).returns(T::Boolean) }

@@ -30,4 +30,4 @@ exit 1 unless storygraph_auth
 storygraph_client = GoodAudibleStorySync::Storygraph::Client.new(auth: storygraph_auth)
 storygraph_library = storygraph_client.get_read_books
 puts "Found #{storygraph_library.total_books} read #{storygraph_library.book_units} on Storygraph"
-storygraph_library.save_to_file(options.storygraph_file)
+storygraph_library.save_to_database(db_client)
