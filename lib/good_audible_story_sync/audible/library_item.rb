@@ -59,7 +59,8 @@ module GoodAudibleStorySync
         return false unless isbn
 
         books_db.upsert(isbn: isbn, title: title, author: Util.join_words(authors),
-          narrator: Util.join_words(narrators), finished_at: finished_at)
+          narrator: Util.join_words(narrators), finished_at: finished_at,
+          percent_complete: percent_complete)
 
         true
       end
@@ -71,11 +72,12 @@ module GoodAudibleStorySync
 
       sig { returns Integer }
       def percent_complete
+        return @percent_complete if @percent_complete
         pct = T.let(
           @data["percent_complete"] || @data.dig("listening_status", "percent_complete"),
-          T.nilable(Float)
+          T.nilable(T.any(Float, Integer))
         )
-        pct.nil? ? 0 : pct.round
+        @percent_complete = pct.nil? ? 0 : pct.round
       end
 
       sig { returns T::Boolean }

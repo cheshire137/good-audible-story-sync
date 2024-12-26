@@ -25,12 +25,16 @@ module GoodAudibleStorySync
             finished_at TEXT
           );
         SQL
+        unless Client.column_exists?(db: @db, table_name: TABLE_NAME, column_name: "percent_complete")
+          puts "#{Util::INFO_EMOJI} Adding percent_complete column to #{TABLE_NAME}..."
+          @db.execute("ALTER TABLE #{TABLE_NAME} ADD COLUMN percent_complete INTEGER")
+        end
       end
 
       sig { returns T::Array[T::Hash[String, T.untyped]] }
       def find_all
-        @db.execute("SELECT isbn, title, author, narrator, finished_at " \
-          "FROM #{TABLE_NAME} ORDER BY finished_at DESC, title ASC, isbn ASC")
+        @db.execute("SELECT isbn, title, author, narrator, finished_at, percent_complete " \
+          "FROM #{TABLE_NAME} ORDER BY finished_at DESC, percent_complete DESC, title ASC, isbn ASC")
       end
 
       sig do
@@ -40,20 +44,22 @@ module GoodAudibleStorySync
           author: T.nilable(String),
           narrator: T.nilable(String),
           finished_at: T.nilable(T.any(String, DateTime, Time, Date)),
+          percent_complete: Integer
         ).void
       end
-      def upsert(isbn:, title:, author:, narrator:, finished_at:)
+      def upsert(isbn:, title:, author:, narrator:, finished_at:, percent_complete:)
         puts "#{Util::INFO_EMOJI} Saving Audible book #{isbn}..."
         finished_at_str = if finished_at.respond_to?(:iso8601)
           T.unsafe(finished_at).iso8601
         else
           finished_at
         end
-        values = [isbn, title, author, narrator, finished_at_str]
-        @db.execute("INSERT INTO #{TABLE_NAME} (isbn, title, author, narrator, finished_at) " \
+        values = [isbn, title, author, narrator, finished_at_str, percent_complete]
+        @db.execute(
+          "INSERT INTO #{TABLE_NAME} (isbn, title, author, narrator, finished_at, percent_complete) " \
           "VALUES (?, ?, ?, ?, ?) ON CONFLICT(isbn) DO UPDATE SET title=excluded.title, " \
           "author=excluded.author, narrator=excluded.narrator, " \
-          "finished_at=excluded.finished_at", values)
+          "finished_at=excluded.finished_at, percent_complete=excluded.percent_complete", values)
       end
     end
   end
