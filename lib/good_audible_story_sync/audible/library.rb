@@ -259,8 +259,8 @@ module GoodAudibleStorySync
         [
           "📚 Loaded #{total_items} #{item_units} from Audible library",
           finished_items_summary(limit: limit),
-          not_started_items_summary(limit: 5),
-          started_items_summary(limit: 5),
+          not_started_items_summary(limit: limit),
+          started_items_summary(limit: limit),
         ].compact.join("\n")
       end
 
