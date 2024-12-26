@@ -53,6 +53,8 @@ module GoodAudibleStorySync
 
       sig { params(source_token: String).returns([String, Time]) }
       def self.refresh_token(source_token)
+        raise "No source token provided to refresh" if source_token.size < 1
+
         body = {
           "requested_token_type" => "access_token",
           "source_token_type" => "refresh_token",
@@ -250,7 +252,7 @@ module GoodAudibleStorySync
         @device_info = audible_data["device_info"]
         @customer_info = audible_data["customer_info"]
 
-        @loaded_from_database = true
+        @loaded_from_database = !!(!@access_token.nil? && !@access_token.strip.empty?)
       end
 
       private

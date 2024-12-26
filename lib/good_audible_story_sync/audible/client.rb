@@ -183,10 +183,16 @@ module GoodAudibleStorySync
       def refresh_token
         puts "#{Util::INFO_EMOJI} Refreshing Audible access token..."
         new_access_token, new_expires = Auth.refresh_token(@auth.refresh_token)
-        @auth.access_token = new_access_token
-        @auth.expires = new_expires
-        @auth.save_to_database(@credentials_db)
-        @have_attempted_token_refresh = true
+
+        if new_access_token.size > 0
+          @auth.access_token = new_access_token
+          @auth.expires = new_expires
+          @auth.save_to_database(@credentials_db)
+          @have_attempted_token_refresh = true
+        else
+          puts "#{Util::ERROR_EMOJI} Failed to refresh Audible access token, giving up"
+          raise NotAuthenticatedError
+        end
       end
     end
   end
