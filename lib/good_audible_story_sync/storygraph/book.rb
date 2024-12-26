@@ -64,6 +64,11 @@ module GoodAudibleStorySync
         @finished_on = date_or_str.is_a?(String) ? Date.parse(date_or_str) : date_or_str
       end
 
+      sig { returns T::Boolean }
+      def finished?
+        !finished_on.nil?
+      end
+
       sig { returns T.nilable(String) }
       def id
         @data["id"]
