@@ -16,7 +16,7 @@ module GoodAudibleStorySync
       end
       def self.load_with_finish_times(client:, options:, db_client:)
         load_finish_times = T.let(false, T::Boolean)
-        library_cache_last_modified = db_client.sync_times.find(SYNC_TIME_KEY)
+        library_cache_last_modified = db_client.sync_times.find(SYNC_TIME_KEY)&.to_time
         library_is_cached = !library_cache_last_modified.nil?
         should_refresh_library = library_cache_last_modified &&
           library_cache_last_modified > options.refresh_cutoff_time
