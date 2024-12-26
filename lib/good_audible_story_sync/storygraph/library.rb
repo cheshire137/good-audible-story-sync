@@ -15,7 +15,6 @@ module GoodAudibleStorySync
       def initialize(total_books: nil)
         @books = T.let([], T::Array[Book])
         @total_books = total_books
-        @loaded_from_file = T.let(false, T::Boolean)
       end
 
       sig { params(book: Book).void }
@@ -31,20 +30,6 @@ module GoodAudibleStorySync
       sig { returns String }
       def book_units
         total_books == 1 ? "book" : "books"
-      end
-
-      sig { params(file_path: String).returns(T::Boolean) }
-      def load_from_file(file_path)
-        return false unless File.exist?(file_path)
-
-        puts "#{Util::INFO_EMOJI} Loading Storygraph library from #{file_path}..."
-        json_str = File.read(file_path)
-        return false if json_str.strip.empty?
-
-        data = T.let(JSON.parse(json_str), T::Array[Hash])
-        data.each { |item_data| add_book(Book.new(item_data)) }
-
-        @loaded_from_file = true
       end
 
       sig { params(db_client: Database::Client).returns(Integer) }
@@ -63,13 +48,6 @@ module GoodAudibleStorySync
         end
         db_client.sync_times.touch(SYNC_TIME_KEY)
         total_saved
-      end
-
-      sig { params(file_path: String).returns(T::Boolean) }
-      def save_to_file(file_path)
-        puts "#{Util::SAVE_EMOJI} Saving Storygraph library data to file #{file_path}..."
-        File.write(file_path, to_json)
-        File.exist?(file_path) && !File.empty?(file_path)
       end
 
       sig { returns String }
