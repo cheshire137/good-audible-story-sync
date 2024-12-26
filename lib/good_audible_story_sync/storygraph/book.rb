@@ -93,6 +93,17 @@ module GoodAudibleStorySync
         end
       end
 
+      sig { params(books_db: Database::StorygraphBooks).returns(T::Boolean) }
+      def save_to_database(books_db)
+        id = self.id
+        return false unless id
+
+        books_db.upsert(id: id, title: title, author: author, finished_on: finished_on,
+          isbn: isbn)
+
+        true
+      end
+
       sig { params(indent_level: Integer).returns(String) }
       def to_s(indent_level: 0)
         lines = [
