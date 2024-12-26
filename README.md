@@ -10,8 +10,8 @@ This is intended to be run from macOS.
 bin/good-audible-story-sync
 ```
 
-You will be prompted to log in to Audible and Storygraph. The tool saves your login credentials in
-an encrypted file and stores the encryption key in the macOS keychain, under the name
+You will be prompted to log in to Audible and Storygraph. The tool saves your encrypted login
+credentials in a SQLite database and stores the encryption key in the macOS keychain, under the name
 'good_audible_story_sync_encryption_key'.
 
 After signing into Audible, it will create a new device that you can see on your Amazon
@@ -23,9 +23,10 @@ you finished reading and when.
 
 ```sh
 Usage: bin/good-audible-story-sync [options]
-    -c CREDENTIALS_FILE,             Path to file that will store encrypted credentials. Defaults to credentials.txt.
-        --credentials-file
-    -l, --library-file LIBRARY_FILE  Path to file that will store info about items in your Audible library. Defaults to audible_library.json.
+    -d DATABASE_FILE,                Path to Sqlite database file. Defaults to good_audible_story_sync.db.
+        --database-file
+    -e EXPIRATION_DAYS,              Max number of days to use cached data, such as Audible library, before refreshing. Defaults to 1.
+        --expiration-days
 ```
 
 ### Sample output
