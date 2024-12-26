@@ -9,12 +9,14 @@ module GoodAudibleStorySync
     class Library
       extend T::Sig
 
+      SYNC_TIME_KEY = "audible_library"
+
       sig do
         params(client: Client, options: Options, db_client: Database::Client).returns(Library)
       end
       def self.load_with_finish_times(client:, options:, db_client:)
         load_finish_times = T.let(false, T::Boolean)
-        library_cache_last_modified = db_client.sync_times.find("audible_library")
+        library_cache_last_modified = db_client.sync_times.find(SYNC_TIME_KEY)
         library_is_cached = !library_cache_last_modified.nil?
         should_refresh_library = library_cache_last_modified &&
           library_cache_last_modified > options.refresh_cutoff_time
@@ -34,7 +36,7 @@ module GoodAudibleStorySync
         if load_finish_times
           finish_times_by_asin = client.get_finish_times_by_asin
           library.populate_finish_times(finish_times_by_asin)
-          library.save_to_database(db_client.audible_books)
+          library.save_to_database(db_client)
         end
 
         library
@@ -61,19 +63,21 @@ module GoodAudibleStorySync
         items.size
       end
 
-      sig { params(db_client: Database::AudibleBooks).returns(Integer) }
+      sig { params(db_client: Database::Client).returns(Integer) }
       def save_to_database(db_client)
         puts "#{Util::SAVE_EMOJI} Caching Audible library in database..."
         total_saved = 0
+        books_db = db_client.audible_books
         items.each do |library_item|
           isbn = library_item.isbn
           if isbn
-            success = library_item.save_to_database(db_client)
+            success = library_item.save_to_database(books_db)
             total_saved += 1 if success
           else
-            puts "#{Util::TAB}#{Util::WARNING_EMOJI} Skipping book with no ISBN: #{library_item.title}"
+            puts "#{Util::TAB}#{Util::WARNING_EMOJI} Skipping book with no ISBN: #{library_item}"
           end
         end
+        db_client.sync_times.touch(SYNC_TIME_KEY)
         total_saved
       end
 
