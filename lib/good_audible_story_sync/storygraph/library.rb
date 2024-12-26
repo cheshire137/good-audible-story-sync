@@ -54,6 +54,16 @@ module GoodAudibleStorySync
         @total_books || @books.size
       end
 
+      sig { returns Integer }
+      def finished_percent
+        @finished_percent ||= (total_finished.to_f / total_books * 100).round
+      end
+
+      sig { returns String }
+      def finished_book_units
+        total_finished == 1 ? "book" : "books"
+      end
+
       sig { returns String }
       def book_units
         total_books == 1 ? "book" : "books"
@@ -87,9 +97,61 @@ module GoodAudibleStorySync
         total_saved
       end
 
+      sig { params(limit: Integer).returns(String) }
+      def to_s(limit: 5)
+        [
+          "📚 Found #{total_books} #{book_units} on Storygraph",
+          finished_books_summary(limit: limit),
+        ].compact.join("\n")
+      end
+
+      sig { params(limit: Integer).returns(String) }
+      def finished_books_summary(limit: 5)
+        lines = T.let([
+          "☑ #{total_finished} #{finished_book_units} " \
+            "(#{finished_percent}%) in Storygraph library have been finished:",
+        ], T::Array[String])
+        lines.concat(finished_books.take(limit).map { |book| book.to_s(indent_level: 1) })
+        lines << "#{Util::TAB}..." if total_finished > limit
+        lines << ""
+        lines.join("\n")
+      end
+
+      sig { returns Integer }
+      def total_finished
+        @total_finished ||= finished_books.size
+      end
+
+      sig { returns T::Array[Book] }
+      def finished_books
+        calculate_finished_unfinished_books
+        @finished_books
+      end
+
       sig { returns String }
       def to_json
         JSON.pretty_generate(books.map(&:to_h))
+      end
+
+      private
+
+      sig { void }
+      def calculate_finished_unfinished_books
+        return if @finished_books && @unfinished_books
+        @finished_books, @unfinished_books = books.partition(&:finished?)
+        @finished_books.sort! do |a, b|
+          a_finish_date = a.finished_on
+          b_finish_date = b.finished_on
+          if a_finish_date && b_finish_date
+            T.must(b_finish_date <=> a_finish_date)
+          elsif a_finish_date
+            -1
+          elsif b_finish_date
+            1
+          else
+            0
+          end
+        end
       end
     end
   end

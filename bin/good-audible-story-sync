@@ -33,4 +33,4 @@ storygraph_library = GoodAudibleStorySync::Storygraph::Library.load(
   db_client: db_client,
   options: options,
 )
-puts "Found #{storygraph_library.total_books} read #{storygraph_library.book_units} on Storygraph"
+puts storygraph_library
