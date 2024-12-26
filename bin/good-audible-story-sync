@@ -28,6 +28,9 @@ storygraph_auth = GoodAudibleStorySync::Storygraph::AuthFlow.run(db_client: db_c
 exit 1 unless storygraph_auth
 
 storygraph_client = GoodAudibleStorySync::Storygraph::Client.new(auth: storygraph_auth)
-storygraph_library = storygraph_client.get_read_books
+storygraph_library = GoodAudibleStorySync::Storygraph::Library.load(
+  client: storygraph_client,
+  db_client: db_client,
+  options: options,
+)
 puts "Found #{storygraph_library.total_books} read #{storygraph_library.book_units} on Storygraph"
-storygraph_library.save_to_database(db_client)

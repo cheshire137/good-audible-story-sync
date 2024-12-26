@@ -30,6 +30,12 @@ module GoodAudibleStorySync
         end
       end
 
+      sig { returns T::Array[T::Hash[String, T.untyped]] }
+      def find_all
+        @db.execute("SELECT id, title, author, finished_on " \
+          "FROM #{TABLE_NAME} ORDER BY finished_on DESC, title ASC, id ASC")
+      end
+
       sig do
         params(
           id: String,

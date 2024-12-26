@@ -8,6 +8,33 @@ module GoodAudibleStorySync
 
       SYNC_TIME_KEY = "storygraph_library"
 
+      sig { params(client: Client, db_client: Database::Client, options: Options).returns(Library) }
+      def self.load(client:, db_client:, options:)
+        library_cache_last_modified = db_client.sync_times.find(SYNC_TIME_KEY)&.to_time
+        library_is_cached = !library_cache_last_modified.nil?
+        should_refresh_library = library_cache_last_modified &&
+          library_cache_last_modified > options.refresh_cutoff_time
+
+        if library_is_cached && should_refresh_library
+          load_from_database(db_client.storygraph_books)
+        else
+          if library_is_cached
+            puts "#{Util::INFO_EMOJI} Storygraph library cache has not been updated " \
+              "since #{Util.pretty_time(library_cache_last_modified)}, updating..."
+          end
+          library = client.get_read_books
+          library.save_to_database(db_client)
+          library
+        end
+      end
+
+      sig { params(books_db: Database::StorygraphBooks).returns(Library) }
+      def self.load_from_database(books_db)
+        library = new
+        library.load_from_database(books_db)
+        library
+      end
+
       sig { returns T::Array[Book] }
       attr_reader :books
 
@@ -30,6 +57,16 @@ module GoodAudibleStorySync
       sig { returns String }
       def book_units
         total_books == 1 ? "book" : "books"
+      end
+
+      sig { params(books_db: Database::StorygraphBooks).returns(T::Boolean) }
+      def load_from_database(books_db)
+        puts "#{Util::INFO_EMOJI} Loading cached Storygraph library..."
+
+        rows = books_db.find_all
+        @books = rows.map { |row| Book.new(row) }
+
+        true
       end
 
       sig { params(db_client: Database::Client).returns(Integer) }
