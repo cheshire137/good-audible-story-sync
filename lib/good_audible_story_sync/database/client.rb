@@ -13,6 +13,15 @@ module GoodAudibleStorySync
         client
       end
 
+      sig do
+        params(db: SQLite3::Database, table_name: String, column_name: String).returns(T::Boolean)
+      end
+      def self.column_exists?(db:, table_name:, column_name:)
+        result = db.get_first_value("SELECT COUNT(*) FROM pragma_table_info(?) WHERE name = ?",
+          table_name, column_name)
+        result == 1
+      end
+
       sig { returns SQLite3::Database }
       attr_reader :db
 

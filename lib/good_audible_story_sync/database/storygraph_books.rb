@@ -24,6 +24,10 @@ module GoodAudibleStorySync
             finished_on TEXT
           );
         SQL
+        unless Client.column_exists?(db: @db, table_name: TABLE_NAME, column_name: "isbn")
+          puts "#{Util::INFO_EMOJI} Adding isbn column to #{TABLE_NAME}..."
+          @db.execute("ALTER TABLE #{TABLE_NAME} ADD COLUMN isbn TEXT")
+        end
       end
 
       sig do
@@ -31,15 +35,16 @@ module GoodAudibleStorySync
           id: String,
           title: T.nilable(String),
           author: T.nilable(String),
-          finished_on: T.nilable(T.any(String, Date))
+          finished_on: T.nilable(T.any(String, Date)),
+          isbn: T.nilable(String)
         ).void
       end
-      def upsert(id:, title:, author:, finished_on:)
+      def upsert(id:, title:, author:, finished_on:, isbn:)
         puts "#{Util::INFO_EMOJI} Saving Storygraph book #{id}..."
         values = [id, title, author, finished_on]
-        @db.execute("INSERT INTO #{TABLE_NAME} (id, title, author, finished_on) " \
-          "VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET title=excluded.title, " \
-          "author=excluded.author, finished_on=excluded.finished_on", values)
+        @db.execute("INSERT INTO #{TABLE_NAME} (id, title, author, finished_on, isbn) " \
+          "VALUES (?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET title=excluded.title, " \
+          "author=excluded.author, finished_on=excluded.finished_on, isbn=excluded.isbn", values)
       end
     end
   end
