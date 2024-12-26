@@ -53,12 +53,12 @@ module GoodAudibleStorySync
         end
       end
 
-      sig { params(db_client: Database::AudibleBooks).returns(T::Boolean) }
-      def save_to_database(db_client)
+      sig { params(books_db: Database::AudibleBooks).returns(T::Boolean) }
+      def save_to_database(books_db)
         isbn = self.isbn
         return false unless isbn
 
-        db_client.upsert(isbn: isbn, title: title, author: Util.join_words(authors),
+        books_db.upsert(isbn: isbn, title: title, author: Util.join_words(authors),
           narrator: Util.join_words(narrators), finished_at: finished_at)
 
         true
@@ -123,6 +123,11 @@ module GoodAudibleStorySync
         else
           "Not started"
         end
+      end
+
+      sig { returns String }
+      def inspect
+        @data.inspect
       end
 
       sig { params(indent_level: Integer).returns(String) }
