@@ -86,7 +86,11 @@ module GoodAudibleStorySync
 
       sig { returns T.nilable(String) }
       def url
-        @data["url"]
+        @url ||= if @data["url"]
+          @data["url"]
+        else
+          "#{Client::BASE_URL}/books/#{id}"
+        end
       end
 
       sig { params(indent_level: Integer).returns(String) }
