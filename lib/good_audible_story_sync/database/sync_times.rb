@@ -35,6 +35,11 @@ module GoodAudibleStorySync
         SQL
       end
 
+      sig { params(key: String).void }
+      def touch(key)
+        upsert(key: key, timestamp: DateTime.now)
+      end
+
       sig { params(key: String, timestamp: T.nilable(DateTime)).void }
       def upsert(key:, timestamp:)
         puts "#{Util::INFO_EMOJI} Saving sync time #{key}..."

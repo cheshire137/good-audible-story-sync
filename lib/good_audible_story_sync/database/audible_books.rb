@@ -39,7 +39,7 @@ module GoodAudibleStorySync
           title: T.nilable(String),
           author: T.nilable(String),
           narrator: T.nilable(String),
-          finished_at: T.nilable(T.any(String, DateTime, Time, Date))
+          finished_at: T.nilable(T.any(String, DateTime, Time, Date)),
         ).void
       end
       def upsert(isbn:, title:, author:, narrator:, finished_at:)
