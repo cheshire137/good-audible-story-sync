@@ -210,17 +210,15 @@ module GoodAudibleStorySync
       sig { returns T::Hash[String, T.untyped] }
       def to_h
         {
-          "audible" => {
-            "adp_token" => adp_token,
-            "device_private_key" => device_private_key,
-            "access_token" => access_token,
-            "refresh_token" => refresh_token,
-            "expires" => expires,
-            "website_cookies" => website_cookies,
-            "store_authentication_cookie" => store_authentication_cookie,
-            "device_info" => device_info,
-            "customer_info" => customer_info,
-          },
+          "adp_token" => adp_token,
+          "device_private_key" => device_private_key,
+          "access_token" => access_token,
+          "refresh_token" => refresh_token,
+          "expires" => expires,
+          "website_cookies" => website_cookies,
+          "store_authentication_cookie" => store_authentication_cookie,
+          "device_info" => device_info,
+          "customer_info" => customer_info,
         }
       end
 
@@ -234,9 +232,9 @@ module GoodAudibleStorySync
         @loaded_from_database
       end
 
-      sig { params(cred_client: Database::Credentials).returns(T::Boolean) }
-      def load_from_database(cred_client)
-        audible_data = cred_client.find(key: "audible")
+      sig { params(creds_db: Database::Credentials).returns(T::Boolean) }
+      def load_from_database(creds_db)
+        audible_data = creds_db.find(key: "audible")
         unless audible_data
           puts "#{Util::INFO_EMOJI} No Audible credentials found in database"
           return false

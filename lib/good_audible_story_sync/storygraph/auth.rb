@@ -59,9 +59,7 @@ module GoodAudibleStorySync
 
       sig { returns T::Hash[String, T.untyped] }
       def to_h
-        {
-          "storygraph" => { "email" => @email, "password" => @password, "username" => @username },
-        }
+        { "email" => @email, "password" => @password, "username" => @username }
       end
 
       sig { params(cred_client: Database::Credentials).void }
