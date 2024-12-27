@@ -35,23 +35,33 @@ module GoodAudibleStorySync
         library
       end
 
-      sig { returns T::Array[Book] }
-      attr_reader :books
-
       sig { params(total_books: T.nilable(Integer)).void }
       def initialize(total_books: nil)
-        @books = T.let([], T::Array[Book])
+        @books_by_id = T.let({}, T::Hash[String, Book])
         @total_books = total_books
+      end
+
+      sig { returns T::Array[Book] }
+      def books
+        @books_by_id.values
       end
 
       sig { params(book: Book).void }
       def add_book(book)
-        @books << book
+        id = book.id
+        raise "Cannot add book without ID" unless id
+
+        existing_book = @books_by_id[id]
+        if existing_book
+          existing_book.copy_from(book)
+        else
+          @books_by_id[id] = book
+        end
       end
 
       sig { returns Integer }
       def total_books
-        @total_books || @books.size
+        @total_books || @books_by_id.size
       end
 
       sig { returns Integer }
@@ -74,7 +84,7 @@ module GoodAudibleStorySync
         puts "#{Util::INFO_EMOJI} Loading cached Storygraph library..."
 
         rows = books_db.find_all
-        @books = rows.map { |row| Book.new(row) }
+        rows.each { |row| add_book(Book.new(row)) }
 
         true
       end
@@ -84,14 +94,9 @@ module GoodAudibleStorySync
         puts "#{Util::SAVE_EMOJI} Caching Storygraph library in database..."
         total_saved = 0
         books_db = db_client.storygraph_books
-        books.each do |book|
-          id = book.id
-          if id
-            success = book.save_to_database(books_db)
-            total_saved += 1 if success
-          else
-            puts "#{Util::TAB}#{Util::WARNING_EMOJI} Skipping book with no ID: #{book}"
-          end
+        @books_by_id.each do |id, book|
+          success = book.save_to_database(books_db)
+          total_saved += 1 if success
         end
         db_client.sync_times.touch(SYNC_TIME_KEY)
         total_saved

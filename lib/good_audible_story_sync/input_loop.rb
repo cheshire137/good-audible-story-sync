@@ -134,6 +134,7 @@ module GoodAudibleStorySync
         finish_dates_by_isbn: audible_library.finish_dates_by_isbn,
         library: storygraph_library,
         client: storygraph_client,
+        db_client: db_client,
       )
     end
 

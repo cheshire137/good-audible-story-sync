@@ -68,7 +68,7 @@ module GoodAudibleStorySync
 
         params = { "search_term" => query }
         page = get("/search?#{URI.encode_www_form(params)}")
-        T.let(page.search("#search-results-ul li a"), Nokogiri::XML::NodeSet)
+        T.let(page.search("#search-results-ul li a.book-list-option"), Nokogiri::XML::NodeSet)
       end
 
       sig do

@@ -8,6 +8,8 @@ module GoodAudibleStorySync
     class Book
       extend T::Sig
 
+      # Public: From .book-list-option element on a URL like
+      # https://app.thestorygraph.com/search?search_term=9781508278511.
       sig do
         params(
           node: Nokogiri::XML::Element,
@@ -16,10 +18,17 @@ module GoodAudibleStorySync
         ).returns(Book)
       end
       def self.from_search_result(node, base_url:, extra_data: {})
+        path = node["href"]
+        id = if node["id"]
+          node["id"].split("search_result_book_").last
+        elsif path&.start_with?("/books/")
+          path.split("/books/").last
+        end
         new({
           "title" => node.at("h1:not(.sr-only)")&.text,
           "author" => node.at("h2:not(.sr-only)")&.text,
-          "url" => base_url + node["href"],
+          "url" => "#{base_url}#{path}",
+          "id" => id,
         }.merge(extra_data))
       end
 
@@ -67,6 +76,23 @@ module GoodAudibleStorySync
       sig { returns T::Boolean }
       def finished?
         !finished_on.nil?
+      end
+
+      sig { params(other_book: Book).returns(T::Boolean) }
+      def copy_from(other_book)
+        unless id == other_book.id
+          raise "Cannot merge Storygraph books with different IDs: #{id} and #{other_book.id}"
+        end
+        puts "#{Util::INFO_EMOJI} Updating book info for #{id}..."
+        any_updates = T.let(false, T::Boolean)
+        other_book.to_h.each do |key, value|
+          if @data[key].nil? || @data[key].is_a?(String) && @data[key].empty?
+            puts "#{Util::TAB}Setting #{key} => #{value}"
+            @data[key] = value
+            any_updates = true
+          end
+        end
+        any_updates
       end
 
       sig { returns T.nilable(String) }
@@ -136,7 +162,7 @@ module GoodAudibleStorySync
 
       sig { returns T::Hash[String, T.untyped] }
       def to_h
-        @data
+        @data.dup
       end
     end
   end
