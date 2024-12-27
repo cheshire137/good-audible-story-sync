@@ -58,6 +58,7 @@ module GoodAudibleStorySync
       def load_page(make_request)
         page = make_request.call
         raise NotAuthenticatedError if Auth.sign_in_page?(page)
+        sleep 1 # don't hammer the server
         page
       end
 
