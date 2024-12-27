@@ -37,6 +37,12 @@ module GoodAudibleStorySync
       # e.g., "Fri November 29, 2024 at 2:47am"
       timestamp.strftime("%a %B %-d, %Y at %-l:%M%P")
     end
+
+    sig { params(date: T.any(DateTime, Time, Date)).returns(String) }
+    def self.pretty_date(date)
+      # e.g., "Fri November 29, 2024"
+      date.strftime("%a %B %-d, %Y")
+    end
   end
 end
 
