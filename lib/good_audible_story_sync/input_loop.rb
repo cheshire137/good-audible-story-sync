@@ -9,9 +9,10 @@ module GoodAudibleStorySync
 
     class UserCommand < T::Enum
       enums do
-        LoadAudibleLibrary = new("a")
-        LoadAudibleUserProfile = new("u")
-        LoadStorygraphLibrary = new("s")
+        DisplayAudibleLibrary = new("a")
+        DisplayAudibleUserProfile = new("u")
+        DisplayStorygraphLibrary = new("s")
+        MarkFinishedBooks = new("f")
         Quit = new("q")
       end
     end
@@ -35,6 +36,7 @@ module GoodAudibleStorySync
         print_options
         cmd = get_user_command
         process_command(cmd)
+        puts
       end
     end
 
@@ -42,10 +44,10 @@ module GoodAudibleStorySync
 
     sig { void }
     def print_options
-      print_option(UserCommand::LoadAudibleLibrary, "load Audible library")
-      print_option(UserCommand::LoadAudibleUserProfile, "load Audible user profile")
-      print_option(UserCommand::LoadStorygraphLibrary, "load Storygraph library")
-      print_option(UserCommand::SyncFinishedBooks, "sync finished books")
+      print_option(UserCommand::DisplayAudibleLibrary, "display Audible library")
+      print_option(UserCommand::DisplayAudibleUserProfile, "display Audible user profile")
+      print_option(UserCommand::DisplayStorygraphLibrary, "display Storygraph library")
+      print_option(UserCommand::MarkFinishedBooks, "mark finished books on Storygraph")
       print_option(UserCommand::Quit, "quit")
     end
 
@@ -87,9 +89,10 @@ module GoodAudibleStorySync
     sig { params(cmd: UserCommand).void }
     def process_command(cmd)
       case cmd
-      when UserCommand::LoadAudibleLibrary then load_audible_library
-      when UserCommand::LoadAudibleUserProfile then load_audible_user_profile
-      when UserCommand::LoadStorygraphLibrary then load_storygraph_library
+      when UserCommand::DisplayAudibleLibrary then load_audible_library
+      when UserCommand::DisplayAudibleUserProfile then load_audible_user_profile
+      when UserCommand::DisplayStorygraphLibrary then load_storygraph_library
+      when UserCommand::MarkFinishedBooks then mark_finished_books
       when UserCommand::Quit then quit
       else
         T.absurd(cmd)
@@ -98,16 +101,24 @@ module GoodAudibleStorySync
 
     sig { void }
     def load_audible_library
-      library = Audible::Library.load_with_finish_times(client: audible_client,
+      puts audible_library
+    end
+
+    sig { returns Audible::Library }
+    def audible_library
+      @audible_library ||= Audible::Library.load_with_finish_times(client: audible_client,
         options: options, db_client: db_client)
-      puts library
     end
 
     sig { void }
     def load_storygraph_library
-      library = Storygraph::Library.load(client: storygraph_client, db_client: db_client,
-        options: options)
-      puts library
+      puts storygraph_library
+    end
+
+    sig { returns Storygraph::Library }
+    def storygraph_library
+      @storygraph_library ||= Storygraph::Library.load(client: storygraph_client,
+        db_client: db_client, options: options)
     end
 
     sig { void }
@@ -115,6 +126,14 @@ module GoodAudibleStorySync
       puts "#{Util::INFO_EMOJI} Getting Audible user profile..."
       user_profile = audible_client.get_user_profile
       puts user_profile.to_s(indent_level: 1)
+    end
+
+    sig { void }
+    def mark_finished_books
+      Storygraph::MarkFinishedFlow.run(
+        finish_dates_by_isbn: audible_library.finish_dates_by_isbn,
+        storygraph_library: storygraph_library,
+      )
     end
 
     sig { void }
