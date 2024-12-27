@@ -58,6 +58,17 @@ module GoodAudibleStorySync
         @loaded_from_database = T.let(false, T::Boolean)
       end
 
+      sig { returns T::Hash[String, Date] }
+      def finish_dates_by_isbn
+        finished_items.each_with_object({}) do |library_item, result|
+          isbn = library_item.isbn
+          finish_time = library_item.finished_at
+          if isbn && !isbn.empty? && finish_time
+            result[isbn] = finish_time.to_date
+          end
+        end
+      end
+
       sig { returns Integer }
       def total_items
         items.size
