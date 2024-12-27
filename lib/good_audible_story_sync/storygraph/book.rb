@@ -43,8 +43,8 @@ module GoodAudibleStorySync
         end
 
         new({
-          "title" => title_link.text,
-          "author" => node.at(".book-title-author-and-series h3 p")&.text,
+          "title" => title_link.text.strip,
+          "author" => node.at(".book-title-author-and-series p")&.text&.strip,
           "url" => base_url + title_link["href"],
           "id" => node["data-book-id"],
           "finished_on" => finished_date_str,
