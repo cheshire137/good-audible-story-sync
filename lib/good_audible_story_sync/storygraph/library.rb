@@ -133,6 +133,11 @@ module GoodAudibleStorySync
         JSON.pretty_generate(books.map(&:to_h))
       end
 
+      sig { params(isbn: String).returns(T.nilable(Book)) }
+      def find_by_isbn(isbn)
+        books.detect { |book| book.isbn == isbn }
+      end
+
       private
 
       sig { void }
