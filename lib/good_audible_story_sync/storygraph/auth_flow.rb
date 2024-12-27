@@ -48,6 +48,7 @@ module GoodAudibleStorySync
 
       sig { returns T.nilable(Auth) }
       def log_in_via_website
+        puts "#{Util::INFO_EMOJI} Logging in to Storygraph..."
         print "Enter Storygraph email: "
         email = gets.chomp
         print "Enter Storygraph password: "
