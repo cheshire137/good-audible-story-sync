@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 # typed: true
 
+require "rainbow"
+
 module GoodAudibleStorySync
   class InputLoop
     extend T::Sig
@@ -27,6 +29,7 @@ module GoodAudibleStorySync
     sig { void }
     def run
       options # parse command line options
+
       loop do
         print_options
         cmd = get_user_command
@@ -38,10 +41,34 @@ module GoodAudibleStorySync
 
     sig { void }
     def print_options
-      puts "#{UserCommand::LoadAudibleLibrary.serialize}) load Audible library"
-      puts "#{UserCommand::LoadAudibleUserProfile.serialize}) load Audible user profile"
-      puts "#{UserCommand::LoadStorygraphLibrary.serialize}) load Storygraph library"
-      puts "#{UserCommand::Quit.serialize}) quit"
+      print_option(UserCommand::LoadAudibleLibrary, "load Audible library")
+      print_option(UserCommand::LoadAudibleUserProfile, "load Audible user profile")
+      print_option(UserCommand::LoadStorygraphLibrary, "load Storygraph library")
+      print_option(UserCommand::SyncFinishedBooks, "sync finished books")
+      print_option(UserCommand::Quit, "quit")
+    end
+
+    sig { params(option: UserCommand, description: String).void }
+    def print_option(option, description)
+      option_letter = option.serialize
+      desc_words = description.split(" ")
+      word_to_highlight = desc_words.detect { |word| word.downcase.start_with?(option_letter) }
+      higlighted_word_index = desc_words.index(word_to_highlight)
+      highlighted_option_letter = Rainbow(option_letter).green
+      highlighted_word = if word_to_highlight
+        head = word_to_highlight.slice(0)
+        tail = word_to_highlight.slice(1..)
+        highlighted_head = Rainbow(head).green
+        "#{highlighted_head}#{tail}"
+      end
+      highlighted_description = if higlighted_word_index
+        head = (desc_words.slice(0, higlighted_word_index) || []).join(" ")
+        tail = (desc_words.slice(higlighted_word_index + 1..) || []).join(" ")
+        [head, highlighted_word, tail].compact.join(" ").strip
+      else
+        description
+      end
+      puts "#{highlighted_option_letter}) #{highlighted_description}"
     end
 
     sig { returns UserCommand }
