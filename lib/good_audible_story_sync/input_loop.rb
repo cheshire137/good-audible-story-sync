@@ -29,6 +29,7 @@ module GoodAudibleStorySync
     sig { void }
     def run
       options # parse command line options
+      db_client # set up database tables
 
       loop do
         print_options
