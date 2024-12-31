@@ -12,10 +12,59 @@ module GoodAudibleStorySync
 
       class NotAuthenticatedError < StandardError; end
 
+      sig { returns Mechanize }
+      attr_reader :agent
+
       sig { params(auth: Auth).void }
       def initialize(auth:)
-        @agent = auth.agent
+        @agent = T.let(auth.agent, Mechanize)
         @auth = auth
+      end
+
+      sig { params(book_id: String, finish_date: Date).returns(T::Boolean) }
+      def set_read_date(book_id, finish_date)
+        page = get("/books/#{book_id}")
+        link = page.link_with(text: /Click to add a read date/) ||
+          page.link_with(text: /Click to edit read date/)
+        unless link
+          puts "#{Util::ERROR_EMOJI} Could not find link to show read-date form"
+          return false
+        end
+
+        update_file = T.let(link.click, Mechanize::File)
+        update_page = Mechanize::Page.new(page.uri, page.response, update_file.body, page.code, @agent)
+        action_regex = /^\/read_instances\//
+        form = update_page.forms.detect { |f| f.action =~ action_regex }
+        unless form
+          puts "#{Util::ERROR_EMOJI} Could not find form to update read date"
+          return false
+        end
+
+        end_day_field = form.field_with(name: "read_instance[day]")
+        unless end_day_field
+          puts "#{Util::ERROR_EMOJI} Could not find day field in read-date form"
+          return false
+        end
+
+        end_month_field = form.field_with(name: "read_instance[month]")
+        unless end_month_field
+          puts "#{Util::ERROR_EMOJI} Could not find month field in read-date form"
+          return false
+        end
+
+        end_year_field = form.field_with(name: "read_instance[year]")
+        unless end_year_field
+          puts "#{Util::ERROR_EMOJI} Could not find year field in read-date form"
+          return false
+        end
+
+        end_year_field.value = finish_date.year
+        end_month_field.value = finish_date.month
+        end_day_field.value = finish_date.day
+
+        form.submit
+
+        true
       end
 
       sig { params(book_id: String).returns(T::Boolean) }
