@@ -83,15 +83,20 @@ module GoodAudibleStorySync
         unless id == other_book.id
           raise "Cannot merge Storygraph books with different IDs: #{id} and #{other_book.id}"
         end
+
         puts "#{Util::INFO_EMOJI} Updating book info for #{id}..."
         any_updates = T.let(false, T::Boolean)
+
         other_book.to_h.each do |key, value|
+          next unless value
+
           if @data[key].nil? || @data[key].is_a?(String) && @data[key].empty?
             puts "#{Util::TAB}Setting #{key} => #{value}"
             @data[key] = value
             any_updates = true
           end
         end
+
         any_updates
       end
 
