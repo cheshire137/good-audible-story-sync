@@ -22,10 +22,15 @@ module GoodAudibleStorySync
             puts "#{Util::INFO_EMOJI} Storygraph library cache has not been updated " \
               "since #{Util.pretty_time(library_cache_last_modified)}, updating..."
           end
-          library = client.get_read_books
-          library.save_to_database(db_client)
-          library
+          load_from_web(client: client, db_client: db_client)
         end
+      end
+
+      sig { params(client: Client, db_client: Database::Client).returns(Library) }
+      def self.load_from_web(client:, db_client:)
+        library = client.get_read_books
+        library.save_to_database(db_client)
+        library
       end
 
       sig { params(books_db: Database::StorygraphBooks).returns(Library) }
