@@ -47,18 +47,8 @@ module GoodAudibleStorySync
 
       sig { params(isbn: String, finish_date: Date).void }
       def process_book(isbn, finish_date)
-        storygraph_book = @library.find_by_isbn(isbn)
-
-        unless storygraph_book
-          storygraph_book = @client.find_by_isbn(isbn)
-          if storygraph_book
-            @library.add_book(storygraph_book)
-            @any_library_changes = true
-          else
-            puts "#{Util::WARNING_EMOJI} Book with ISBN #{isbn} not found on Storygraph"
-            return
-          end
-        end
+        storygraph_book = find_storygraph_book(isbn)
+        return unless storygraph_book
 
         storygraph_finish_date = storygraph_book.finished_on
 
@@ -73,6 +63,27 @@ module GoodAudibleStorySync
             "marked finished on #{Util.pretty_date(storygraph_finish_date)}, versus " \
             "Audible finish date #{Util.pretty_date(finish_date)}"
         end
+      end
+
+      sig { params(isbn: String).returns(T.nilable(Book)) }
+      def find_storygraph_book(isbn)
+        # Do we already have the book associated with the ISBN in the local database?
+        storygraph_book = @library.find_by_isbn(isbn)
+
+        unless storygraph_book
+          # If not, search for it on Storygraph using the ISBN
+          storygraph_book = @client.find_by_isbn(isbn)
+
+          if storygraph_book
+            # Associate the book with its ISBN in the local library database
+            @library.add_book(storygraph_book)
+            @any_library_changes = true
+          else
+            puts "#{Util::WARNING_EMOJI} Book with ISBN #{isbn} not found on Storygraph"
+          end
+        end
+
+        storygraph_book
       end
     end
   end
