@@ -43,7 +43,11 @@ module GoodAudibleStorySync
         raise AuthError.new("Cannot sign in without credentials") if @email.nil? || @password.nil?
 
         puts "#{Util::INFO_EMOJI} Signing into Storygraph as #{@email}..."
-        page = @agent.get("#{BASE_URL}/users/sign_in")
+        page = begin
+          @agent.get("#{BASE_URL}/users/sign_in")
+        rescue Errno::ETIMEDOUT => err
+          raise AuthError.new("Failed to load sign-in page: #{err}")
+        end
         sign_in_form = page.form_with(action: "/users/sign_in") do |form|
           form["user[email]"] = @email
           form["user[password]"] = @password
