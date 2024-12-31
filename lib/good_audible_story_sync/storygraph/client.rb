@@ -2,6 +2,7 @@
 # typed: true
 
 require "mechanize"
+require "rainbow"
 
 module GoodAudibleStorySync
   module Storygraph
@@ -80,7 +81,7 @@ module GoodAudibleStorySync
       sig { params(path: String).returns(Mechanize::Page) }
       def get(path)
         url = "#{BASE_URL}#{path}"
-        puts "#{Util::INFO_EMOJI} GET #{url}"
+        puts "#{Util::INFO_EMOJI} GET #{Rainbow(url).blue}"
         load_page(-> { @agent.get(url) })
       end
 

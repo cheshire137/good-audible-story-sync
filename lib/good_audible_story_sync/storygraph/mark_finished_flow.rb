@@ -51,18 +51,18 @@ module GoodAudibleStorySync
         return unless book
 
         storygraph_finish_date = book.finished_on
+        title_and_author = book.title_and_author(stylize: true)
 
         if storygraph_finish_date.nil?
-          puts "#{Util::INFO_EMOJI} Storygraph book #{book.title_and_author} " \
-            "not marked as finished"
+          puts "#{Util::INFO_EMOJI} Storygraph book #{title_and_author} not marked as finished"
           set_finish_date_on_storygraph(book, target_finish_date)
         elsif storygraph_finish_date == target_finish_date
-          puts "#{Util::SUCCESS_EMOJI} Storygraph book #{book.title_and_author} already " \
+          puts "#{Util::SUCCESS_EMOJI} Storygraph book #{title_and_author} already " \
             "marked as finished on #{Util.pretty_date(target_finish_date)}"
         else
-          puts "#{Util::WARNING_EMOJI} Storygraph book #{book.title_and_author} " \
-            "marked finished on #{Util.pretty_date(storygraph_finish_date)}, versus " \
-            "Audible finish date #{Util.pretty_date(target_finish_date)}"
+          puts "#{Util::WARNING_EMOJI} #{title_and_author}"
+          puts "#{Util::TAB}Storygraph read date: #{Util.pretty_date(storygraph_finish_date)}"
+          puts "#{Util::TAB}Versus Audible: #{Util.pretty_date(target_finish_date)}"
         end
       end
 
@@ -91,8 +91,8 @@ module GoodAudibleStorySync
       def set_finish_date_on_storygraph(book, finish_date)
         book_id = book.id
         unless book_id
-          puts "#{Util::WARNING_EMOJI} Book #{book.title_and_author} has no Storygraph ID, " \
-            "cannot set read date"
+          puts "#{Util::WARNING_EMOJI} Book #{book.title_and_author(stylize: true)} has no " \
+            "Storygraph ID, cannot set read date"
           return false
         end
 
@@ -112,7 +112,7 @@ module GoodAudibleStorySync
         end
 
         success = @client.set_read_date(book_id, finish_date)
-        puts "#{Util::TAB}#{Util::SUCCESS_EMOJI} Done! #{book.url}" if success
+        puts "#{Util::TAB}#{Util::SUCCESS_EMOJI} Done! #{book.url(stylize: true)}" if success
         success
       end
     end

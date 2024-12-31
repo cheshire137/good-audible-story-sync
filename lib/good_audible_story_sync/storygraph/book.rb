@@ -2,6 +2,7 @@
 # typed: true
 
 require "date"
+require "rainbow"
 
 module GoodAudibleStorySync
   module Storygraph
@@ -105,9 +106,11 @@ module GoodAudibleStorySync
         @data["isbn"]
       end
 
-      sig { returns T.nilable(String) }
-      def title
-        @data["title"]
+      sig { params(stylize: T::Boolean).returns(T.nilable(String)) }
+      def title(stylize: false)
+        value = @data["title"]
+        return value unless stylize && value
+        Rainbow(value).underline
       end
 
       sig { returns T.nilable(String) }
@@ -115,12 +118,15 @@ module GoodAudibleStorySync
         @data["author"]
       end
 
-      sig { returns T.nilable(String) }
-      def url
-        @url ||= if @data["url"]
-          @data["url"]
+      sig { params(stylize: T::Boolean).returns(T.nilable(String)) }
+      def url(stylize: false)
+        @url_by_stylize ||= {}
+        return @url_by_stylize[stylize] if @url_by_stylize[stylize]
+        value = @data["url"] || "#{Client::BASE_URL}/books/#{id}"
+        @url_by_stylize[stylize] = if stylize
+          Rainbow(value).blue
         else
-          "#{Client::BASE_URL}/books/#{id}"
+          value
         end
       end
 
@@ -135,34 +141,39 @@ module GoodAudibleStorySync
         true
       end
 
-      sig { params(indent_level: Integer).returns(String) }
-      def to_s(indent_level: 0)
+      sig { params(indent_level: Integer, stylize: T::Boolean).returns(String) }
+      def to_s(indent_level: 0, stylize: false)
+        line1 = "#{Util::TAB * indent_level}#{title_and_author(stylize: stylize)}" \
+          "#{finish_status(stylize: stylize)}"
         lines = [
-          "#{Util::TAB * indent_level}#{title_and_author}#{finish_status}",
-          "#{Util::TAB * (indent_level + 1)}#{Util::NEWLINE_EMOJI} #{url}",
+          line1,
+          "#{Util::TAB * (indent_level + 1)}#{Util::NEWLINE_EMOJI} #{url(stylize: stylize)}",
         ]
         lines.join("\n")
       end
 
-      sig { returns String }
-      def title_and_author
-        return @title_and_author if @title_and_author
+      sig { params(stylize: T::Boolean).returns(String) }
+      def title_and_author(stylize: false)
+        @title_and_author_by_stylize ||= {}
+        return @title_and_author_by_stylize[stylize] if @title_and_author_by_stylize[stylize]
         author = self.author
-        @title_and_author = if author && !author.empty?
-          "#{title} by #{author}"
+        @title_and_author_by_stylize[stylize] = if author && !author.empty?
+          "#{title(stylize: stylize)} by #{author}"
         else
-          title || "Unknown (ID #{id})"
+          title(stylize: stylize) || "Unknown (ID #{id})"
         end
       end
 
-      sig { params(prefix: String).returns(T.nilable(String)) }
-      def finish_status(prefix: " - ")
+      sig { params(prefix: String, stylize: T::Boolean).returns(T.nilable(String)) }
+      def finish_status(prefix: " - ", stylize: false)
         finished_on = self.finished_on
-        if finished_on
+        value = if finished_on
           "#{prefix}Finished #{Util.pretty_date(finished_on)}"
         elsif finished?
           "#{prefix}Finished"
         end
+        return value unless value && stylize
+        Rainbow(value).italic
       end
 
       sig { returns String }
