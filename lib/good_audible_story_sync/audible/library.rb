@@ -58,6 +58,11 @@ module GoodAudibleStorySync
         @loaded_from_database = T.let(false, T::Boolean)
       end
 
+      sig { params(isbn: String).returns(T.nilable(LibraryItem)) }
+      def find_by_isbn(isbn)
+        items.detect { |library_item| library_item.isbn == isbn }
+      end
+
       sig { returns T::Hash[String, Date] }
       def finish_dates_by_isbn
         finished_items.each_with_object({}) do |library_item, result|
