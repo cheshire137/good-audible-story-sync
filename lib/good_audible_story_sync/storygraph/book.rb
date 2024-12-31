@@ -8,30 +8,6 @@ module GoodAudibleStorySync
     class Book
       extend T::Sig
 
-      # Public: From .book-list-option element on a URL like
-      # https://app.thestorygraph.com/search?search_term=9781508278511.
-      sig do
-        params(
-          node: Nokogiri::XML::Element,
-          base_url: String,
-          extra_data: T::Hash[String, T.untyped]
-        ).returns(Book)
-      end
-      def self.from_search_result(node, base_url:, extra_data: {})
-        path = node["href"]
-        id = if node["id"]
-          node["id"].split("search_result_book_").last
-        elsif path&.start_with?("/books/")
-          path.split("/books/").last
-        end
-        new({
-          "title" => node.at("h1:not(.sr-only)")&.text,
-          "author" => node.at("h2:not(.sr-only)")&.text,
-          "url" => "#{base_url}#{path}",
-          "id" => id,
-        }.merge(extra_data))
-      end
-
       # Public: From .book-pane element on a URL like
       # https://app.thestorygraph.com/books-read/cheshire137.
       sig do
