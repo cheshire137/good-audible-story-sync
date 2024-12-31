@@ -108,7 +108,14 @@ module GoodAudibleStorySync
         result_link = search(isbn).first
         return unless result_link
 
-        Book.from_search_result(result_link.node, base_url: BASE_URL, extra_data: { "isbn" => isbn })
+        page = result_link.click
+
+        other_edition_link = page.link_with(text: /You've read another edition/)
+        if other_edition_link
+          page = other_edition_link.click
+        end
+
+        Book.from_book_page(page, extra_data: { "isbn" => isbn })
       end
 
       # e.g., https://app.thestorygraph.com/search?search_term=midnight%20chernobyl
