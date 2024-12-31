@@ -162,7 +162,7 @@ module GoodAudibleStorySync
       sig { params(indent_level: Integer).returns(String) }
       def to_s(indent_level: 0)
         lines = [
-          "#{Util::TAB * indent_level}#{title_and_author}",
+          "#{Util::TAB * indent_level}#{title_and_author}#{finish_status}",
           "#{Util::TAB * (indent_level + 1)}#{Util::NEWLINE_EMOJI} #{url}",
         ]
         lines.join("\n")
@@ -176,6 +176,16 @@ module GoodAudibleStorySync
           "#{title} by #{author}"
         else
           title || "Unknown (ID #{id})"
+        end
+      end
+
+      sig { params(prefix: String).returns(T.nilable(String)) }
+      def finish_status(prefix: " - ")
+        finished_on = self.finished_on
+        if finished_on
+          "#{prefix}Finished #{Util.pretty_date(finished_on)}"
+        elsif finished?
+          "#{prefix}Finished"
         end
       end
 
