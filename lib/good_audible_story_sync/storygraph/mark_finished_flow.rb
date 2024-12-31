@@ -117,7 +117,13 @@ module GoodAudibleStorySync
         end
 
         success = @client.set_read_date(book_id, finish_date)
-        puts "#{Util::TAB}#{Util::SUCCESS_EMOJI} Done! #{book.url(stylize: true)}" if success
+
+        if success
+          book.finished_on = finish_date
+          book.save_to_database(@db_client.storygraph_books)
+          puts "#{Util::TAB}#{Util::SUCCESS_EMOJI} Done! #{book.url(stylize: true)}"
+        end
+
         success
       end
 
