@@ -3,6 +3,7 @@
 # typed: true
 
 require "date"
+require "rainbow"
 
 module GoodAudibleStorySync
   module Audible
@@ -65,9 +66,11 @@ module GoodAudibleStorySync
         true
       end
 
-      sig { returns T.nilable(String) }
-      def title
-        @data["title"]
+      sig { params(stylize: T::Boolean).returns(T.nilable(String)) }
+      def title(stylize: false)
+        value = @data["title"]
+        return value unless stylize && value
+        Rainbow(value).underline
       end
 
       sig { returns Integer }
@@ -103,27 +106,37 @@ module GoodAudibleStorySync
         @data.dig("listening_status", "time_remaining_seconds")
       end
 
-      sig { params(indent_level: Integer).returns(String) }
-      def title_and_authors(indent_level: 0)
-        "#{Util::TAB * indent_level}#{title} by #{Util.join_words(authors)}"
+      sig { params(indent_level: Integer, stylize: T::Boolean).returns(String) }
+      def title_and_authors(indent_level: 0, stylize: false)
+        "#{Util::TAB * indent_level}#{title(stylize: stylize)} by #{Util.join_words(authors)}"
       end
 
-      sig { params(indent_level: Integer).returns(String) }
-      def narrator_summary(indent_level: 0)
-        "#{Util::TAB * indent_level}#{Util::NEWLINE_EMOJI} Narrated by #{Util.join_words(narrators)}"
+      sig { params(indent_level: Integer, stylize: T::Boolean).returns(String) }
+      def narrator_summary(indent_level: 0, stylize: false)
+        value = "Narrated by #{Util.join_words(narrators)}"
+        value = Rainbow(value).italic if stylize
+        "#{Util::TAB * indent_level}#{Util::NEWLINE_EMOJI} #{value}"
       end
 
-      sig { returns String }
-      def finish_status
+      sig { params(stylize: T::Boolean).returns(String) }
+      def finish_status(stylize: false)
         finished_at = self.finished_at
         if finished_at
-          "Finished #{Util.pretty_time(finished_at)}"
+          value = "Finished #{Util.pretty_time(finished_at)}"
+          value = Rainbow(value).green if stylize
+          value
         elsif finished?
-          "Finished"
+          value = "Finished"
+          value = Rainbow(value).green if stylize
+          value
         elsif started?
-          "#{percent_complete}% complete"
+          value = "#{percent_complete}% complete"
+          value = Rainbow(value).yellow if stylize
+          value
         else
-          "Not started"
+          value = "Not started"
+          value = Rainbow(value).white if stylize
+          value
         end
       end
 
@@ -132,10 +145,11 @@ module GoodAudibleStorySync
         @data.inspect
       end
 
-      sig { params(indent_level: Integer).returns(String) }
-      def to_s(indent_level: 0)
-        line1 = "#{title_and_authors(indent_level: indent_level)} — #{finish_status}"
-        line2 = narrator_summary(indent_level: indent_level + 1)
+      sig { params(indent_level: Integer, stylize: T::Boolean).returns(String) }
+      def to_s(indent_level: 0, stylize: false)
+        line1 = "#{title_and_authors(indent_level: indent_level, stylize: stylize)} — " \
+          "#{finish_status(stylize: stylize)}"
+        line2 = narrator_summary(indent_level: indent_level + 1, stylize: stylize)
         [line1, line2].join("\n")
       end
 

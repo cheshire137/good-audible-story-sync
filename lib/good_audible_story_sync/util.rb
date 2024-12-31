@@ -10,7 +10,8 @@ module GoodAudibleStorySync
     INFO_EMOJI = "ℹ️"
     ERROR_EMOJI = "❌"
     SAVE_EMOJI = "💾"
-    SUCCESS_EMOJI = "✅"
+    SUCCESS_EMOJI = "🟢"
+    DONE_EMOJI = "✅"
     NEWLINE_EMOJI = "⮑"
     WARNING_EMOJI = "🟡"
 

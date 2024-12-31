@@ -68,6 +68,11 @@ module GoodAudibleStorySync
 
       sig { params(isbn: String).returns(T.nilable(Book)) }
       def find_book_by_isbn(isbn)
+        audible_book = @audible_library.find_by_isbn(isbn)
+        if audible_book
+          puts "#{Util::INFO_EMOJI}Looking up #{audible_book.to_s(stylize: true)} on Storygraph..."
+        end
+
         # Do we already have the book associated with the ISBN in the local database?
         book = @library.find_by_isbn(isbn)
 

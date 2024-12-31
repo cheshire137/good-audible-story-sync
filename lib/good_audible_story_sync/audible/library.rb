@@ -230,53 +230,59 @@ module GoodAudibleStorySync
         JSON.pretty_generate(items.map(&:to_h))
       end
 
-      sig { params(limit: Integer).returns(String) }
-      def finished_items_summary(limit: 5)
+      sig { params(limit: Integer, stylize: T::Boolean).returns(String) }
+      def finished_items_summary(limit: 5, stylize: false)
         lines = T.let([
-          "☑ #{total_finished} #{finished_item_units} " \
+          "#{Util::DONE_EMOJI} #{total_finished} #{finished_item_units} " \
             "(#{finished_percent}%) in Audible library have been finished:",
         ], T::Array[String])
-        lines.concat(finished_items.take(limit).map { |item| item.to_s(indent_level: 1) })
+        lines.concat(finished_items.take(limit).map do |item|
+          item.to_s(indent_level: 1, stylize: stylize)
+        end)
         lines << "#{Util::TAB}..." if total_finished > limit
         lines << ""
         lines.join("\n")
       end
 
-      sig { params(limit: Integer).returns(T.nilable(String)) }
-      def not_started_items_summary(limit: 5)
+      sig { params(limit: Integer, stylize: T::Boolean).returns(T.nilable(String)) }
+      def not_started_items_summary(limit: 5, stylize: false)
         return if total_not_started < 1
 
         lines = T.let([
           "🌱 #{total_not_started} #{not_started_item_units} (#{not_started_percent}%) " \
             "in Audible library have not been started:",
         ], T::Array[String])
-        lines.concat(not_started_items.take(limit).map { |item| item.to_s(indent_level: 1) })
+        lines.concat(not_started_items.take(limit).map do |item|
+          item.to_s(indent_level: 1, stylize: stylize)
+        end)
         lines << "#{Util::TAB}..." if total_not_started > limit
         lines << ""
         lines.join("\n")
       end
 
-      sig { params(limit: Integer).returns(T.nilable(String)) }
-      def started_items_summary(limit: 5)
+      sig { params(limit: Integer, stylize: T::Boolean).returns(T.nilable(String)) }
+      def started_items_summary(limit: 5, stylize: false)
         return if total_started < 1
 
         lines = T.let([
           "🔜 #{total_started} #{started_item_units} (#{started_percent}%) in Audible " \
             "library are in progress:",
         ], T::Array[String])
-        lines.concat(started_items.take(limit).map { |item| item.to_s(indent_level: 1) })
+        lines.concat(started_items.take(limit).map do |item|
+          item.to_s(indent_level: 1, stylize: stylize)
+        end)
         lines << "#{Util::TAB}..." if total_started > limit
         lines << ""
         lines.join("\n")
       end
 
-      sig { params(limit: Integer).returns(String) }
-      def to_s(limit: 5)
+      sig { params(limit: Integer, stylize: T::Boolean).returns(String) }
+      def to_s(limit: 5, stylize: false)
         [
           "📚 Loaded #{total_items} #{item_units} from Audible library",
-          finished_items_summary(limit: limit),
-          not_started_items_summary(limit: limit),
-          started_items_summary(limit: limit),
+          finished_items_summary(limit: limit, stylize: stylize),
+          not_started_items_summary(limit: limit, stylize: stylize),
+          started_items_summary(limit: limit, stylize: stylize),
         ].compact.join("\n")
       end
 

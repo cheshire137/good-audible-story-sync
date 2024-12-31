@@ -104,7 +104,7 @@ module GoodAudibleStorySync
 
     sig { void }
     def load_audible_library
-      puts audible_library
+      puts audible_library.to_s(stylize: true)
     end
 
     sig { returns Audible::Library }
