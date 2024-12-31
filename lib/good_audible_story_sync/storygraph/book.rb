@@ -45,9 +45,11 @@ module GoodAudibleStorySync
         title_link = node.at(".book-title-author-and-series h3 a")
         raise "No title link found" unless title_link
 
+        author_el = node.search(".book-title-author-and-series p").last
+
         new({
           "title" => title_link.text.strip,
-          "author" => node.at(".book-title-author-and-series p")&.text&.strip,
+          "author" => author_el&.text&.strip,
           "url" => base_url + title_link["href"],
           "id" => node["data-book-id"],
           "finished_on" => extract_finish_date(node),
