@@ -54,6 +54,29 @@ module GoodAudibleStorySync
         }.merge(extra_data))
       end
 
+      # Public: From a page like
+      # https://app.thestorygraph.com/books/96b3360a-289c-4e1c-b463-f9f0f5b72a0e.
+      sig { params(page: Mechanize::Page, extra_data: T::Hash[String, T.untyped]).returns(Book) }
+      def self.from_book_page(page, extra_data: {})
+        title_header = page.at(".book-title-author-and-series h3")
+        raise "No title header found" unless title_header
+
+        book_id_node = page.at("[data-book-id]")
+        book_id = if book_id_node
+          book_id_node["data-book-id"]
+        else
+          page.uri.path.split("/books/").last
+        end
+
+        new({
+          "id" => book_id,
+          "title" => title_header.text.strip,
+          "author" => page.at(".book-title-author-and-series a")&.text&.strip,
+          "url" => page.uri.to_s,
+          "finished_on" => extract_finish_date(page),
+        }.merge(extra_data))
+      end
+
       sig { params(data: T::Hash[String, T.untyped]).void }
       def initialize(data)
         @data = data
