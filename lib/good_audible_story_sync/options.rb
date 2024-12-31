@@ -11,6 +11,11 @@ module GoodAudibleStorySync
     EMOJI_PREFIX = "⚙️"
     DEFAULT_EXPIRATION_DAYS = 1
 
+    # sig { returns Options }
+    def self.default
+      parse(script_name: File.basename($0))
+    end
+
     # sig { params(script_name: String, cipher: T.nilable(Util::Cipher), argv: Array).returns(Options) }
     def self.parse(script_name:, cipher: nil, argv: ARGV)
       puts "#{EMOJI_PREFIX} Parsing options..."
