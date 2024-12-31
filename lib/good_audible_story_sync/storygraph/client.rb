@@ -164,7 +164,10 @@ module GoodAudibleStorySync
           next_page_link = page.at(".read-books #next_link")
           if next_page_link
             units = books.size == 1 ? "book" : "books"
-            puts "#{Util::INFO_EMOJI} Found #{books.size} #{units} on page"
+            print "#{Util::INFO_EMOJI} Found #{books.size} #{units} on page"
+            last_book = books.last
+            print ", ending with #{last_book.title_and_author}" if last_book
+            puts
 
             books += get_read_books_on_page(path: next_page_link["href"],
               load_all_pages: load_all_pages)
