@@ -10,8 +10,9 @@ module GoodAudibleStorySync
     class UserCommand < T::Enum
       enums do
         DisplayAudibleLibrary = new("a")
-        DisplayAudibleUserProfile = new("u")
+        DisplayAudibleUserProfile = new("p")
         DisplayStorygraphLibrary = new("s")
+        UpdateStorygraphLibraryCache = new("c")
         MarkFinishedBooks = new("f")
         Quit = new("q")
       end
@@ -47,6 +48,7 @@ module GoodAudibleStorySync
       print_option(UserCommand::DisplayAudibleLibrary, "display Audible library")
       print_option(UserCommand::DisplayAudibleUserProfile, "display Audible user profile")
       print_option(UserCommand::DisplayStorygraphLibrary, "display Storygraph library")
+      print_option(UserCommand::UpdateStorygraphLibraryCache, "update Storygraph library cache")
       print_option(UserCommand::MarkFinishedBooks, "mark finished books on Storygraph")
       print_option(UserCommand::Quit, "quit")
     end
@@ -92,6 +94,7 @@ module GoodAudibleStorySync
       when UserCommand::DisplayAudibleLibrary then load_audible_library
       when UserCommand::DisplayAudibleUserProfile then load_audible_user_profile
       when UserCommand::DisplayStorygraphLibrary then load_storygraph_library
+      when UserCommand::UpdateStorygraphLibraryCache then update_storygraph_library_cache
       when UserCommand::MarkFinishedBooks then mark_finished_books
       when UserCommand::Quit then quit
       else
@@ -113,6 +116,12 @@ module GoodAudibleStorySync
     sig { void }
     def load_storygraph_library
       puts storygraph_library
+    end
+
+    sig { void }
+    def update_storygraph_library_cache
+      @storygraph_library = Storygraph::Library.load_from_web(client: storygraph_client,
+        db_client: db_client)
     end
 
     sig { returns Storygraph::Library }
