@@ -8,27 +8,27 @@ module GoodAudibleStorySync
 
       sig do
         params(
-          finish_dates_by_isbn: T::Hash[String, Date],
+          audible_library: Audible::Library,
           library: Library,
           client: Client,
           db_client: Database::Client
         ).void
       end
-      def self.run(finish_dates_by_isbn:, library:, client:, db_client:)
-        new(finish_dates_by_isbn: finish_dates_by_isbn, library: library, client: client,
+      def self.run(audible_library:, library:, client:, db_client:)
+        new(audible_library: audible_library, library: library, client: client,
           db_client: db_client).run
       end
 
       sig do
         params(
-          finish_dates_by_isbn: T::Hash[String, Date],
+          audible_library: Audible::Library,
           library: Library,
           client: Client,
           db_client: Database::Client
         ).void
       end
-      def initialize(finish_dates_by_isbn:, library:, client:, db_client:)
-        @finish_dates_by_isbn = finish_dates_by_isbn
+      def initialize(audible_library:, library:, client:, db_client:)
+        @audible_library = audible_library
         @library = library
         @client = client
         @any_library_changes = T.let(false, T::Boolean)
@@ -37,7 +37,7 @@ module GoodAudibleStorySync
 
       sig { void }
       def run
-        @finish_dates_by_isbn.each do |isbn, finish_date|
+        finish_dates_by_isbn.each do |isbn, finish_date|
           process_book(isbn, finish_date)
         end
         @library.save_to_database(@db_client) if @any_library_changes
@@ -114,6 +114,11 @@ module GoodAudibleStorySync
         success = @client.set_read_date(book_id, finish_date)
         puts "#{Util::TAB}#{Util::SUCCESS_EMOJI} Done! #{book.url(stylize: true)}" if success
         success
+      end
+
+      sig { returns T::Hash[String, Date] }
+      def finish_dates_by_isbn
+        @finish_dates_by_isbn ||= @audible_library.finish_dates_by_isbn
       end
     end
   end

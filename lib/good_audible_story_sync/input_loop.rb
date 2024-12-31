@@ -140,7 +140,7 @@ module GoodAudibleStorySync
     sig { void }
     def mark_finished_books
       Storygraph::MarkFinishedFlow.run(
-        finish_dates_by_isbn: audible_library.finish_dates_by_isbn,
+        audible_library: audible_library,
         library: storygraph_library,
         client: storygraph_client,
         db_client: db_client,
