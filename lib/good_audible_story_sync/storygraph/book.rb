@@ -45,24 +45,12 @@ module GoodAudibleStorySync
         title_link = node.at(".book-title-author-and-series h3 a")
         raise "No title link found" unless title_link
 
-        finish_date_prefix = "Finished "
-        finished_el = node.search(".action-menu p").detect do |el|
-          el.text.start_with?(finish_date_prefix)
-        end
-        finished_date_str = if finished_el
-          # e.g., "Dec 20, 2024\n              \n                Click to edit read date"
-          date_str_and_extra = finished_el.text.split(finish_date_prefix).last
-
-          # e.g., "Dec 20, 2024"
-          date_str_and_extra.split("\n").first
-        end
-
         new({
           "title" => title_link.text.strip,
           "author" => node.at(".book-title-author-and-series p")&.text&.strip,
           "url" => base_url + title_link["href"],
           "id" => node["data-book-id"],
-          "finished_on" => finished_date_str,
+          "finished_on" => extract_finish_date(node),
         }.merge(extra_data))
       end
 
@@ -175,6 +163,24 @@ module GoodAudibleStorySync
       def to_h
         @data.dup
       end
+
+      sig do
+        params(node_or_page: T.any(Nokogiri::XML::Element, Mechanize::Page)).returns(T.nilable(String))
+      end
+      def self.extract_finish_date(node_or_page)
+        finish_date_prefix = "Finished "
+        finished_el = node_or_page.search(".action-menu p").detect do |el|
+          el.text.start_with?(finish_date_prefix)
+        end
+        if finished_el
+          # e.g., "Dec 20, 2024\n              \n                Click to edit read date"
+          date_str_and_extra = finished_el.text.split(finish_date_prefix).last
+
+          # e.g., "Dec 20, 2024"
+          date_str_and_extra.split("\n").first
+        end
+      end
+      private_class_method :extract_finish_date
     end
   end
 end
