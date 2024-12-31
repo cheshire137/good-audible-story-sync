@@ -52,10 +52,11 @@ module GoodAudibleStorySync
         raise "Cannot add book without ID" unless id
 
         existing_book = @books_by_id[id]
-        if existing_book
+        @books_by_id[id] = if existing_book
           existing_book.copy_from(book)
+          existing_book
         else
-          @books_by_id[id] = book
+          book
         end
       end
 
