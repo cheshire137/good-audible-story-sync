@@ -18,6 +18,16 @@ module GoodAudibleStorySync
         @auth = auth
       end
 
+      sig { params(book_id: String).returns(T::Boolean) }
+      def set_currently_reading(book_id)
+        page = get("/books/#{book_id}")
+        action_regex = /book_id=#{book_id}&status=currently-reading$/
+        form = page.forms.detect { |f| f.action =~ action_regex }
+        return false unless form
+        form.submit
+        true
+      end
+
       sig { params(path: String).returns(Mechanize::Page) }
       def get(path)
         url = "#{BASE_URL}#{path}"
