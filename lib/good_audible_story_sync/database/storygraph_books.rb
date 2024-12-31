@@ -36,6 +36,12 @@ module GoodAudibleStorySync
           "FROM #{TABLE_NAME} ORDER BY finished_on DESC, title ASC, id ASC")
       end
 
+      sig { params(id: String).void }
+      def delete(id)
+        puts "#{Util::INFO_EMOJI} Removing cached Storygraph book #{id}..."
+        @db.execute("DELETE FROM #{TABLE_NAME} WHERE id = ?", id)
+      end
+
       sig do
         params(
           id: String,

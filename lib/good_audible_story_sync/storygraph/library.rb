@@ -60,6 +60,12 @@ module GoodAudibleStorySync
         end
       end
 
+      sig { params(book: Book).void }
+      def remove_book(book)
+        book_id = book.id
+        @books_by_id.delete(book_id) if book_id
+      end
+
       sig { returns Integer }
       def total_books
         @total_books || @books_by_id.size
