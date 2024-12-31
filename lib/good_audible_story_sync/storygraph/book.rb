@@ -34,8 +34,14 @@ module GoodAudibleStorySync
 
       # Public: From .book-pane element on a URL like
       # https://app.thestorygraph.com/books-read/cheshire137.
-      sig { params(node: Nokogiri::XML::Element, base_url: String).returns(Book) }
-      def self.from_read_book(node, base_url:)
+      sig do
+        params(
+          node: Nokogiri::XML::Element,
+          base_url: String,
+          extra_data: T::Hash[String, T.untyped]
+        ).returns(Book)
+      end
+      def self.from_read_book(node, base_url:, extra_data: {})
         title_link = node.at(".book-title-author-and-series h3 a")
         raise "No title link found" unless title_link
 
@@ -57,7 +63,7 @@ module GoodAudibleStorySync
           "url" => base_url + title_link["href"],
           "id" => node["data-book-id"],
           "finished_on" => finished_date_str,
-        })
+        }.merge(extra_data))
       end
 
       sig { params(data: T::Hash[String, T.untyped]).void }
