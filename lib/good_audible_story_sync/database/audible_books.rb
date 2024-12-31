@@ -57,7 +57,7 @@ module GoodAudibleStorySync
         values = [isbn, title, author, narrator, finished_at_str, percent_complete]
         @db.execute(
           "INSERT INTO #{TABLE_NAME} (isbn, title, author, narrator, finished_at, percent_complete) " \
-          "VALUES (?, ?, ?, ?, ?) ON CONFLICT(isbn) DO UPDATE SET title=excluded.title, " \
+          "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(isbn) DO UPDATE SET title=excluded.title, " \
           "author=excluded.author, narrator=excluded.narrator, " \
           "finished_at=excluded.finished_at, percent_complete=excluded.percent_complete", values)
       end
