@@ -105,10 +105,23 @@ module GoodAudibleStorySync
 
       sig { params(isbn: String).returns(T.nilable(Book)) }
       def find_by_isbn(isbn)
-        result_link = T.let(search(isbn).first, T.nilable(Nokogiri::XML::Element))
+        result_link = search(isbn).first
         return unless result_link
 
-        Book.from_search_result(result_link, base_url: BASE_URL, extra_data: { "isbn" => isbn })
+        Book.from_search_result(result_link.node, base_url: BASE_URL, extra_data: { "isbn" => isbn })
+      end
+
+      # e.g., https://app.thestorygraph.com/search?search_term=midnight%20chernobyl
+      sig { params(query: String).returns(T::Array[Mechanize::Page::Link]) }
+      def search(query)
+        raise "No search query provided" if query.strip.empty?
+
+        params = { "search_term" => query }
+        page = get("/search?#{URI.encode_www_form(params)}")
+        search_results_list = page.at("#search-results-ul")
+        return [] unless search_results_list
+
+        page.links.select { |link| link.node.ancestors.include?(search_results_list) }
       end
 
       private
@@ -119,16 +132,6 @@ module GoodAudibleStorySync
         raise NotAuthenticatedError if Auth.sign_in_page?(page)
         sleep 1 # don't hammer the server
         page
-      end
-
-      # e.g., https://app.thestorygraph.com/search?search_term=midnight%20chernobyl
-      sig { params(query: String).returns(Nokogiri::XML::NodeSet) }
-      def search(query)
-        raise "No search query provided" if query.strip.empty?
-
-        params = { "search_term" => query }
-        page = get("/search?#{URI.encode_www_form(params)}")
-        T.let(page.search("#search-results-ul li a.book-list-option"), Nokogiri::XML::NodeSet)
       end
 
       sig do
