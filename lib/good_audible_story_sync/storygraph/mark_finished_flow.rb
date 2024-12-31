@@ -45,45 +45,75 @@ module GoodAudibleStorySync
 
       private
 
-      sig { params(isbn: String, finish_date: Date).void }
-      def process_book(isbn, finish_date)
-        storygraph_book = find_storygraph_book(isbn)
-        return unless storygraph_book
+      sig { params(isbn: String, target_finish_date: Date).void }
+      def process_book(isbn, target_finish_date)
+        book = find_book_by_isbn(isbn)
+        return unless book
 
-        storygraph_finish_date = storygraph_book.finished_on
+        storygraph_finish_date = book.finished_on
 
         if storygraph_finish_date.nil?
-          puts "#{Util::INFO_EMOJI} Storygraph book #{storygraph_book.title_and_author} " \
+          puts "#{Util::INFO_EMOJI} Storygraph book #{book.title_and_author} " \
             "not marked as finished"
-        elsif storygraph_finish_date == finish_date
-          puts "#{Util::SUCCESS_EMOJI} Storygraph book #{storygraph_book.title_and_author} already " \
-            "marked as finished on #{Util.pretty_date(finish_date)}"
+          set_finish_date_on_storygraph(book, target_finish_date)
+        elsif storygraph_finish_date == target_finish_date
+          puts "#{Util::SUCCESS_EMOJI} Storygraph book #{book.title_and_author} already " \
+            "marked as finished on #{Util.pretty_date(target_finish_date)}"
         else
-          puts "#{Util::WARNING_EMOJI} Storygraph book #{storygraph_book.title_and_author} " \
+          puts "#{Util::WARNING_EMOJI} Storygraph book #{book.title_and_author} " \
             "marked finished on #{Util.pretty_date(storygraph_finish_date)}, versus " \
-            "Audible finish date #{Util.pretty_date(finish_date)}"
+            "Audible finish date #{Util.pretty_date(target_finish_date)}"
         end
       end
 
       sig { params(isbn: String).returns(T.nilable(Book)) }
-      def find_storygraph_book(isbn)
+      def find_book_by_isbn(isbn)
         # Do we already have the book associated with the ISBN in the local database?
-        storygraph_book = @library.find_by_isbn(isbn)
+        book = @library.find_by_isbn(isbn)
 
-        unless storygraph_book
+        unless book
           # If not, search for it on Storygraph using the ISBN
-          storygraph_book = @client.find_by_isbn(isbn)
+          book = @client.find_by_isbn(isbn)
 
-          if storygraph_book
+          if book
             # Associate the book with its ISBN in the local library database
-            @library.add_book(storygraph_book)
+            @library.add_book(book)
             @any_library_changes = true
           else
             puts "#{Util::WARNING_EMOJI} Book with ISBN #{isbn} not found on Storygraph"
           end
         end
 
-        storygraph_book
+        book
+      end
+
+      sig { params(book: Book, finish_date: Date).returns(T::Boolean) }
+      def set_finish_date_on_storygraph(book, finish_date)
+        book_id = book.id
+        unless book_id
+          puts "#{Util::WARNING_EMOJI} Book #{book.title_and_author} has no Storygraph ID, " \
+            "cannot set read date"
+          return false
+        end
+
+        puts book.to_s
+        puts "Finished: #{Util.pretty_date(finish_date)}"
+        print "Set read date on Storygraph? (y/n/q) "
+        input = gets.chomp.downcase.strip
+
+        if input == "q"
+          puts "Goodbye!"
+          exit 0
+        end
+
+        unless input == "y"
+          puts "#{Util::TAB}#{Util::INFO_EMOJI} Skipping..."
+          return false
+        end
+
+        success = @client.set_read_date(book_id, finish_date)
+        puts "#{Util::TAB}#{Util::SUCCESS_EMOJI} Done! #{book.url}" if success
+        success
       end
     end
   end
