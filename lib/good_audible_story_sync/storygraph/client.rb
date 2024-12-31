@@ -106,7 +106,8 @@ module GoodAudibleStorySync
 
       sig { params(isbn: String).returns(T.nilable(Book)) }
       def find_by_isbn(isbn)
-        result_link = search(isbn).first
+        result_links = search(isbn).reject { |l| l.text.strip.start_with?("View all results") }
+        result_link = result_links.first
         return unless result_link
 
         page = result_link.click
