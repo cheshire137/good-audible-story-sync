@@ -13,20 +13,20 @@ module GoodAudibleStorySync
       sig do
         params(
           node: Nokogiri::XML::Element,
-          base_url: String,
+          page: Mechanize::Page,
           extra_data: T::Hash[String, T.untyped]
         ).returns(Book)
       end
-      def self.from_read_book(node, base_url:, extra_data: {})
+      def self.from_read_book(node, page:, extra_data: {})
         title_link = node.at(".book-title-author-and-series h3 a")
-        raise "No title link found" unless title_link
+        raise "No title link found on #{page.uri}" unless title_link
 
         author_el = node.search(".book-title-author-and-series p").last
 
         new({
           "title" => title_link.text.strip,
           "author" => author_el&.text&.strip,
-          "url" => base_url + title_link["href"],
+          "url" => "#{page.uri.origin}#{title_link["href"]}",
           "id" => node["data-book-id"],
           "finished_on" => extract_finish_date(node),
         }.merge(extra_data))
@@ -37,7 +37,7 @@ module GoodAudibleStorySync
       sig { params(page: Mechanize::Page, extra_data: T::Hash[String, T.untyped]).returns(Book) }
       def self.from_book_page(page, extra_data: {})
         title_header = page.at(".book-title-author-and-series h3")
-        raise "No title header found" unless title_header
+        raise "No title header found on page #{page.uri}" unless title_header
 
         book_id_node = page.at("[data-book-id]")
         book_id = if book_id_node

@@ -157,7 +157,7 @@ module GoodAudibleStorySync
 
         book_elements = T.let(page.search(".read-books-panes .book-pane"), Nokogiri::XML::NodeSet)
         books = book_elements.map do |book_element|
-          Book.from_read_book(book_element, base_url: BASE_URL)
+          Book.from_read_book(book_element, page: page)
         end
 
         if load_all_pages
