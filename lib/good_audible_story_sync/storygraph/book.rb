@@ -40,7 +40,7 @@ module GoodAudibleStorySync
           "url" => "#{page.uri.origin}#{title_link["href"]}",
           "id" => book_pane["data-book-id"],
           "finished_on" => extract_finish_date(book_pane),
-          "status" => status_from_read_status_label(read_status_label),
+          "status" => status_from_read_status_label(read_status_label) || Status::Read.serialize,
         }.merge(extra_data))
       end
 
