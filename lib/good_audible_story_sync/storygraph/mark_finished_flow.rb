@@ -40,7 +40,6 @@ module GoodAudibleStorySync
         @audible_library = audible_library
         @library = library
         @client = client
-        @any_library_changes = T.let(false, T::Boolean)
         @db_client = db_client
         @current_book = T.let(nil, T.nilable(Book))
         @current_finish_date = T.let(nil, T.nilable(Date))
@@ -54,7 +53,6 @@ module GoodAudibleStorySync
           process_book(isbn)
           break if @stop_marking_finished
         end
-        @library.save_to_database(@db_client) if @any_library_changes
       end
 
       private
@@ -98,7 +96,7 @@ module GoodAudibleStorySync
           if book
             # Associate the book with its ISBN in the local library database
             @library.add_book(book)
-            @any_library_changes = true
+            book.save_to_database(@db_client.storygraph_books)
           else
             puts "#{Util::WARNING_EMOJI} Book with ISBN #{isbn} not found on Storygraph"
           end

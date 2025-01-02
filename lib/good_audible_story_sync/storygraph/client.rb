@@ -99,8 +99,14 @@ module GoodAudibleStorySync
       end
 
       # e.g., https://app.thestorygraph.com/books-read/cheshire137
-      sig { params(page: Integer, load_all_pages: T::Boolean).returns(Library) }
-      def get_read_books(page: 1, load_all_pages: true)
+      sig do
+        params(
+          page: Integer,
+          load_all_pages: T::Boolean,
+          process_book: T.nilable(T.proc.params(arg0: Book).void)
+        ).returns(Library)
+      end
+      def get_read_books(page: 1, load_all_pages: true, process_book: nil)
         initial_page = get("/books-read/#{@auth.username}?page=#{page}")
 
         filter_header_prefix = "Filter list "
@@ -113,7 +119,10 @@ module GoodAudibleStorySync
 
         library = Library.new(total_books: total_books)
         books = get_read_books_on_page(page: initial_page, load_all_pages: load_all_pages)
-        books.each { |book| library.add_book(book) }
+        books.each do |book|
+          library.add_book(book)
+          process_book.call(book) if process_book
+        end
         library
       end
 

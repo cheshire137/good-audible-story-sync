@@ -28,8 +28,13 @@ module GoodAudibleStorySync
 
       sig { params(client: Client, db_client: Database::Client).returns(Library) }
       def self.load_from_web(client:, db_client:)
-        library = client.get_read_books
-        library.save_to_database(db_client)
+        books_db = db_client.storygraph_books
+        save_book = T.let(
+          ->(book) { book.save_to_database(books_db) },
+          T.proc.params(arg0: GoodAudibleStorySync::Storygraph::Book).void
+        )
+        library = client.get_read_books(process_book: save_book)
+        library.update_sync_time(db_client.sync_times)
         library
       end
 
@@ -105,19 +110,6 @@ module GoodAudibleStorySync
       def update_sync_time(sync_times_db)
         puts "#{Util::SAVE_EMOJI} Updating time Storygraph library was last cached..."
         sync_times_db.touch(SYNC_TIME_KEY)
-      end
-
-      sig { params(db_client: Database::Client).returns(Integer) }
-      def save_to_database(db_client)
-        puts "#{Util::SAVE_EMOJI} Caching Storygraph library in database..."
-        total_saved = 0
-        books_db = db_client.storygraph_books
-        @books_by_id.each do |id, book|
-          success = book.save_to_database(books_db)
-          total_saved += 1 if success
-        end
-        update_sync_time(db_client.sync_times)
-        total_saved
       end
 
       sig { params(limit: Integer).returns(String) }
