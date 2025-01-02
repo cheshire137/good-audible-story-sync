@@ -53,6 +53,11 @@ module GoodAudibleStorySync
       str.gsub(/[[:space:]]+/, " ").strip
     end
 
+    sig { params(str: String).returns(T::Boolean) }
+    def self.integer?(str)
+      str.to_i.to_s == str
+    end
+
     sig { params(option: String, description: String).void }
     def self.print_option(option, description)
       desc_words = description.split(" ")
