@@ -6,6 +6,15 @@ module GoodAudibleStorySync
     class MarkFinishedFlow
       extend T::Sig
 
+      class UserCommand < T::Enum
+        enums do
+          SetReadDate = new("r")
+          NextBook = new("n")
+          Cancel = new("c")
+          Quit = new("q")
+        end
+      end
+
       sig do
         params(
           audible_library: Audible::Library,
@@ -33,36 +42,42 @@ module GoodAudibleStorySync
         @client = client
         @any_library_changes = T.let(false, T::Boolean)
         @db_client = db_client
+        @current_book = T.let(nil, T.nilable(Book))
+        @current_finish_date = T.let(nil, T.nilable(Date))
+        @stop_marking_finished = T.let(false, T::Boolean)
       end
 
       sig { void }
       def run
         finish_dates_by_isbn.each do |isbn, finish_date|
-          process_book(isbn, finish_date)
+          @current_finish_date = finish_date
+          process_book(isbn)
+          break if @stop_marking_finished
         end
         @library.save_to_database(@db_client) if @any_library_changes
       end
 
       private
 
-      sig { params(isbn: String, target_finish_date: Date).void }
-      def process_book(isbn, target_finish_date)
-        book = find_book_by_isbn(isbn)
-        return unless book
+      sig { params(isbn: String).void }
+      def process_book(isbn)
+        @current_book = find_book_by_isbn(isbn)
+        return unless @current_book
 
-        storygraph_finish_date = book.finished_on
-        title_and_author = book.title_and_author(stylize: true)
+        storygraph_finish_date = @current_book.finished_on
+        title_and_author = @current_book.title_and_author(stylize: true)
 
         if storygraph_finish_date.nil?
           puts "#{Util::INFO_EMOJI} Storygraph book #{title_and_author} not marked as finished"
-          set_finish_date_on_storygraph(book, target_finish_date)
-        elsif storygraph_finish_date == target_finish_date
+          prompt_user_about_current_book
+        elsif storygraph_finish_date == @current_finish_date
           puts "#{Util::SUCCESS_EMOJI} Storygraph book #{title_and_author} already " \
-            "marked as finished on #{Util.pretty_date(target_finish_date)}"
+            "marked as finished on #{Util.pretty_date(@current_finish_date)}"
         else
           puts "#{Util::WARNING_EMOJI} #{title_and_author}"
           puts "#{Util::TAB}Storygraph read date: #{Util.pretty_date(storygraph_finish_date)}"
-          puts "#{Util::TAB}Versus Audible: #{Util.pretty_date(target_finish_date)}"
+          puts "#{Util::TAB}Versus Audible: #{Util.pretty_date(T.must(@current_finish_date))}"
+          prompt_user_about_current_book
         end
       end
 
@@ -92,8 +107,48 @@ module GoodAudibleStorySync
         book
       end
 
-      sig { params(book: Book, finish_date: Date).returns(T::Boolean) }
-      def set_finish_date_on_storygraph(book, finish_date)
+      sig { returns UserCommand }
+      def get_user_command
+        cmd = T.let(nil, T.nilable(UserCommand))
+        while cmd.nil?
+          print "Choose an option: "
+          input = gets.chomp
+          cmd = UserCommand.try_deserialize(input)
+          puts "Invalid command" if cmd.nil?
+        end
+        cmd
+      end
+
+      sig { void }
+      def prompt_user_about_current_book
+        book = T.must(@current_book)
+        puts book.to_s
+        print_options
+        cmd = get_user_command
+        process_command(cmd)
+        puts
+      end
+
+      sig { params(cmd: UserCommand).void }
+      def process_command(cmd)
+        case cmd
+        when UserCommand::Quit then quit
+        when UserCommand::NextBook then skip_current_book
+        when UserCommand::SetReadDate then set_read_date_on_current_book
+        when UserCommand::Cancel then cancel
+        else
+          T.absurd(cmd)
+        end
+      end
+
+      sig { void }
+      def cancel
+        @stop_marking_finished = true
+      end
+
+      sig { returns T::Boolean }
+      def set_read_date_on_current_book
+        book = T.must(@current_book)
         book_id = book.id
         unless book_id
           puts "#{Util::WARNING_EMOJI} Book #{book.title_and_author(stylize: true)} has no " \
@@ -101,21 +156,7 @@ module GoodAudibleStorySync
           return false
         end
 
-        puts book.to_s
-        puts "Finished: #{Util.pretty_date(finish_date)}"
-        print "Set read date on Storygraph? (y/n/q) "
-        input = gets.chomp.downcase.strip
-
-        if input == "q"
-          puts "Goodbye!"
-          exit 0
-        end
-
-        unless input == "y"
-          puts "#{Util::TAB}#{Util::INFO_EMOJI} Skipping..."
-          return false
-        end
-
+        finish_date = T.must(@current_finish_date)
         success = @client.set_read_date(book_id, finish_date)
 
         if success
@@ -127,9 +168,35 @@ module GoodAudibleStorySync
         success
       end
 
+      sig { void }
+      def skip_current_book
+        puts "#{Util::TAB}#{Util::INFO_EMOJI} Skipping..."
+        @current_book = nil
+        @current_finish_date = nil
+      end
+
+      sig { void }
+      def quit
+        puts "Goodbye!"
+        exit 0
+      end
+
       sig { returns T::Hash[String, Date] }
       def finish_dates_by_isbn
         @finish_dates_by_isbn ||= @audible_library.finish_dates_by_isbn
+      end
+
+      sig { void }
+      def print_options
+        print_option(UserCommand::SetReadDate, "set read date to #{Util.pretty_date(T.must(@current_finish_date))}")
+        print_option(UserCommand::NextBook, "next book")
+        print_option(UserCommand::Cancel, "cancel")
+        print_option(UserCommand::Quit, "quit")
+      end
+
+      sig { params(option: UserCommand, description: String).void }
+      def print_option(option, description)
+        Util.print_option(option.serialize, description)
       end
     end
   end
