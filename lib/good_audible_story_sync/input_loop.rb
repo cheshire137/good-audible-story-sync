@@ -14,6 +14,7 @@ module GoodAudibleStorySync
         DisplayStorygraphLibrary = new("s")
         UpdateStorygraphLibraryCache = new("c")
         MarkFinishedBooks = new("f")
+        LookUpStorygraphBook = new("l")
         Quit = new("q")
       end
     end
@@ -48,6 +49,7 @@ module GoodAudibleStorySync
       print_option(UserCommand::DisplayAudibleLibrary, "display Audible library")
       print_option(UserCommand::DisplayAudibleUserProfile, "display Audible user profile")
       print_option(UserCommand::DisplayStorygraphLibrary, "display Storygraph library")
+      print_option(UserCommand::LookUpStorygraphBook, "look up book on Storygraph")
       print_option(UserCommand::UpdateStorygraphLibraryCache, "update Storygraph library cache")
       print_option(UserCommand::MarkFinishedBooks, "mark finished books on Storygraph")
       print_option(UserCommand::Quit, "quit")
@@ -79,9 +81,15 @@ module GoodAudibleStorySync
       when UserCommand::UpdateStorygraphLibraryCache then update_storygraph_library_cache
       when UserCommand::MarkFinishedBooks then mark_finished_books
       when UserCommand::Quit then quit
+      when UserCommand::LookUpStorygraphBook then look_up_storygraph_book
       else
         T.absurd(cmd)
       end
+    end
+
+    sig { void }
+    def look_up_storygraph_book
+      Storygraph::LookUpBookFlow.run(client: storygraph_client, books_db: db_client.storygraph_books)
     end
 
     sig { void }
