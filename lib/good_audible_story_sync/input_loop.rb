@@ -55,25 +55,7 @@ module GoodAudibleStorySync
 
     sig { params(option: UserCommand, description: String).void }
     def print_option(option, description)
-      option_letter = option.serialize
-      desc_words = description.split(" ")
-      word_to_highlight = desc_words.detect { |word| word.downcase.start_with?(option_letter) }
-      highlighted_word_index = desc_words.index(word_to_highlight)
-      highlighted_option_letter = Rainbow(option_letter).green
-      highlighted_word = if word_to_highlight
-        head = word_to_highlight.slice(0)
-        tail = word_to_highlight.slice(1..)
-        highlighted_head = Rainbow(head).green
-        "#{highlighted_head}#{tail}"
-      end
-      highlighted_description = if highlighted_word_index
-        head = (desc_words.slice(0, highlighted_word_index) || []).join(" ")
-        tail = (desc_words.slice(highlighted_word_index + 1..) || []).join(" ")
-        [head, highlighted_word, tail].compact.join(" ").strip
-      else
-        description
-      end
-      puts "#{highlighted_option_letter}) #{highlighted_description}"
+      Util.print_option(option.serialize, description)
     end
 
     sig { returns UserCommand }
