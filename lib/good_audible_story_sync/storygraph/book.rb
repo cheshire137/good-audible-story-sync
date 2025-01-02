@@ -221,10 +221,12 @@ module GoodAudibleStorySync
         elsif want_to_read?
           "Want to read"
         else
-          status&.serialize || "Unknown"
+          status&.serialize
         end
-        value = "#{prefix}#{suffix}"
-        stylize ? Rainbow(value).italic : value
+        if suffix
+          value = "#{prefix}#{suffix}"
+          stylize ? Rainbow(value).italic : value
+        end
       end
 
       sig { returns String }

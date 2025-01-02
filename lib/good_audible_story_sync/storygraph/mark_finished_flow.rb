@@ -120,7 +120,7 @@ module GoodAudibleStorySync
       sig { void }
       def prompt_user_about_current_book
         book = T.must(@current_book)
-        puts book.to_s
+        puts book.to_s(stylize: true)
         print_options
         cmd = get_user_command
         process_command(cmd)
