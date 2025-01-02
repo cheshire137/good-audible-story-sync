@@ -22,9 +22,9 @@ module GoodAudibleStorySync
         @auth = auth
       end
 
-      sig { params(book_id: String).returns(T::Boolean) }
-      def mark_as_read(book_id)
-        page = get("/books/#{book_id}")
+      sig { params(book_id: String, page: T.nilable(Mechanize::Page)).returns(T::Boolean) }
+      def mark_as_read(book_id, page: nil)
+        page ||= get_book_page(book_id)
         action_regex = /book_id=#{book_id}&status=read/
         form = page.forms.detect { |f| f.action =~ action_regex }
         unless form
@@ -35,11 +35,25 @@ module GoodAudibleStorySync
         true
       end
 
+      sig { params(book_id: String).returns(Mechanize::Page) }
+      def get_book_page(book_id)
+        get("/books/#{book_id}")
+      end
+
       sig { params(book_id: String, finish_date: Date).returns(T::Boolean) }
       def set_read_date(book_id, finish_date)
-        page = get("/books/#{book_id}")
-        link = page.link_with(text: /Click to add a read date/) ||
-          page.link_with(text: /Click to edit read date/)
+        page = get_book_page(book_id)
+        link = get_link_to_set_read_date(page)
+
+        if link.nil? && page.at(".read-status-label").nil?
+          puts "#{Util::INFO_EMOJI} Marking book as read..."
+          success = mark_as_read(book_id, page: page)
+          return false unless success
+
+          page = get_book_page(book_id)
+          link = get_link_to_set_read_date(page)
+        end
+
         unless link
           puts "#{Util::ERROR_EMOJI} Could not find link to show read-date form"
           return false
@@ -83,7 +97,7 @@ module GoodAudibleStorySync
 
       sig { params(book_id: String).returns(T::Boolean) }
       def set_currently_reading(book_id)
-        page = get("/books/#{book_id}")
+        page = get_book_page(book_id)
         action_regex = /book_id=#{book_id}&status=currently-reading$/
         form = page.forms.detect { |f| f.action =~ action_regex }
         return false unless form
@@ -166,6 +180,12 @@ module GoodAudibleStorySync
       end
 
       private
+
+      sig { params(page: Mechanize::Page).returns(T.nilable(Mechanize::Page::Link)) }
+      def get_link_to_set_read_date(page)
+        page.link_with(text: /Click to add a read date/) ||
+          page.link_with(text: /Click to edit read date/)
+      end
 
       sig { params(make_request: T.proc.returns(Mechanize::Page)).returns(Mechanize::Page) }
       def load_page(make_request)
