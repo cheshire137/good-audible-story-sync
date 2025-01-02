@@ -25,8 +25,8 @@ module GoodAudibleStorySync
         author_el = node.search(".book-title-author-and-series p").last
 
         new({
-          "title" => title_link.text.strip,
-          "author" => author_el&.text&.strip,
+          "title" => Util.squish(title_link.text.strip),
+          "author" => Util.squish(author_el&.text&.strip),
           "url" => "#{page.uri.origin}#{title_link["href"]}",
           "id" => node["data-book-id"],
           "finished_on" => extract_finish_date(node),
@@ -47,10 +47,12 @@ module GoodAudibleStorySync
           page.uri.path.split("/books/").last
         end
 
+        author_link = page.at(".book-title-author-and-series a")
+
         new({
           "id" => book_id,
-          "title" => title_header.text.strip,
-          "author" => page.at(".book-title-author-and-series a")&.text&.strip,
+          "title" => Util.squish(title_header.text.strip),
+          "author" => Util.squish(author_link&.text&.strip),
           "url" => page.uri.to_s,
           "finished_on" => extract_finish_date(page),
         }.merge(extra_data))

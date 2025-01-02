@@ -44,6 +44,12 @@ module GoodAudibleStorySync
       # e.g., "Fri November 29, 2024"
       date.strftime("%a %B %-d, %Y")
     end
+
+    sig { params(str: T.nilable(String)).returns(T.nilable(String)) }
+    def self.squish(str)
+      return unless str
+      str.gsub(/[[:space:]]+/, " ").strip
+    end
   end
 end
 
