@@ -58,6 +58,12 @@ module GoodAudibleStorySync
       str.to_i.to_s == str
     end
 
+    sig { params(str: String).returns(T::Boolean) }
+    def self.isbn?(str)
+      idx = str =~ /^(?=(?:\D*\d){10}(?:(?:\D*\d){3})?$)[\d-]+$/
+      idx == 0
+    end
+
     sig { params(option: String, description: String).void }
     def self.print_option(option, description)
       desc_words = description.split(" ")
