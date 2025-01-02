@@ -40,7 +40,7 @@ module GoodAudibleStorySync
           "url" => "#{page.uri.origin}#{title_link["href"]}",
           "id" => book_pane["data-book-id"],
           "finished_on" => extract_finish_date(book_pane),
-          "status" => status_from_read_status_label(read_status_label) || Status::Read.serialize,
+          "status" => read_status_label&.text&.strip&.downcase || Status::Read.serialize,
         }.merge(extra_data))
       end
 
@@ -67,15 +67,8 @@ module GoodAudibleStorySync
           "author" => Util.squish(author_link&.text&.strip),
           "url" => page.uri.to_s,
           "finished_on" => extract_finish_date(page),
-          "status" => status_from_read_status_label(read_status_label),
+          "status" => read_status_label&.text&.strip&.downcase,
         }.merge(extra_data))
-      end
-
-      sig { params(read_status_label: T.nilable(Nokogiri::XML::Element)).returns(T.nilable(Status)) }
-      def self.status_from_read_status_label(read_status_label)
-        return unless read_status_label
-        read_status = read_status_label.text.strip.downcase
-        Status.try_deserialize(read_status)
       end
 
       sig { params(data: T::Hash[String, T.untyped]).void }
@@ -152,7 +145,8 @@ module GoodAudibleStorySync
       sig { returns T.nilable(Status) }
       def status
         value = @data["status"]
-        Status.try_deserialize(value) if value
+        return value if value.nil? || value.is_a?(Status)
+        Status.try_deserialize(value.to_s)
       end
 
       sig { params(stylize: T::Boolean).returns(T.nilable(String)) }
