@@ -126,9 +126,13 @@ module GoodAudibleStorySync
         library
       end
 
-      sig { params(isbn: String).returns(T.nilable(Book)) }
-      def find_by_isbn(isbn)
+      sig { params(isbn: String, fallback_query: T.nilable(String)).returns(T.nilable(Book)) }
+      def find_by_isbn(isbn, fallback_query: nil)
         result_link = search(isbn).first
+        if result_link.nil? && fallback_query
+          puts "#{Util::WARNING_EMOJI} No results for ISBN #{isbn}, searching for '#{fallback_query}'"
+          result_link = search(fallback_query).first
+        end
         return unless result_link
 
         page = result_link.click

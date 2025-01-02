@@ -155,7 +155,6 @@ module GoodAudibleStorySync
 
       sig { returns T.nilable(String) }
       def search_query
-        return isbn if isbn
         return unless title
         [title, Util.join_words(authors)].compact.join(" ")
       end

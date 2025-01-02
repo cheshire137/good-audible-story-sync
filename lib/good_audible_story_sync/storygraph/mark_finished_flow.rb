@@ -90,8 +90,8 @@ module GoodAudibleStorySync
         book = @library.find_by_isbn(isbn)
 
         unless book
-          # If not, search for it on Storygraph using the ISBN
-          book = @client.find_by_isbn(isbn)
+          # If not, search for it on Storygraph using the ISBN, then by title and author
+          book = @client.find_by_isbn(isbn, fallback_query: audible_book&.search_query)
 
           if book
             # Associate the book with its ISBN in the local library database
