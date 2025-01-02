@@ -142,7 +142,8 @@ module GoodAudibleStorySync
       def load_book_search_result(link, extra_data: {})
         page = link.click
 
-        other_edition_link = page.link_with(text: /You've read another edition/)
+        other_edition_link = page.link_with(text: /You've read another edition/) ||
+          page.link_with(text: /You did not finish another edition/)
         if other_edition_link
           page = other_edition_link.click
         end
