@@ -73,9 +73,9 @@ module GoodAudibleStorySync
     sig { params(cmd: UserCommand).void }
     def process_command(cmd)
       case cmd
-      when UserCommand::DisplayAudibleLibrary then load_audible_library
-      when UserCommand::DisplayAudibleUserProfile then load_audible_user_profile
-      when UserCommand::DisplayStorygraphLibrary then load_storygraph_library
+      when UserCommand::DisplayAudibleLibrary then display_audible_library
+      when UserCommand::DisplayAudibleUserProfile then display_audible_user_profile
+      when UserCommand::DisplayStorygraphLibrary then display_storygraph_library
       when UserCommand::UpdateStorygraphLibraryCache then update_storygraph_library_cache
       when UserCommand::MarkFinishedBooks then mark_finished_books
       when UserCommand::Quit then quit
@@ -85,7 +85,7 @@ module GoodAudibleStorySync
     end
 
     sig { void }
-    def load_audible_library
+    def display_audible_library
       puts audible_library.to_s(stylize: true)
     end
 
@@ -96,8 +96,8 @@ module GoodAudibleStorySync
     end
 
     sig { void }
-    def load_storygraph_library
-      puts storygraph_library
+    def display_storygraph_library
+      puts storygraph_library.to_s(stylize: true)
     end
 
     sig { void }
@@ -113,7 +113,7 @@ module GoodAudibleStorySync
     end
 
     sig { void }
-    def load_audible_user_profile
+    def display_audible_user_profile
       puts "#{Util::INFO_EMOJI} Getting Audible user profile..."
       user_profile = audible_client.get_user_profile
       puts user_profile.to_s(indent_level: 1)

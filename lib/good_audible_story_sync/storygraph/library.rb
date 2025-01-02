@@ -112,21 +112,21 @@ module GoodAudibleStorySync
         sync_times_db.touch(SYNC_TIME_KEY)
       end
 
-      sig { params(limit: Integer).returns(String) }
-      def to_s(limit: 5)
+      sig { params(limit: Integer, stylize: T::Boolean).returns(String) }
+      def to_s(limit: 5, stylize: false)
         [
           "📚 Found #{total_books} #{book_units} on Storygraph",
-          finished_books_summary(limit: limit),
+          finished_books_summary(limit: limit, stylize: stylize),
         ].compact.join("\n")
       end
 
-      sig { params(limit: Integer).returns(String) }
-      def finished_books_summary(limit: 5)
+      sig { params(limit: Integer, stylize: T::Boolean).returns(String) }
+      def finished_books_summary(limit: 5, stylize: false)
         lines = T.let([
           "☑ #{total_finished} #{finished_book_units} " \
             "(#{finished_percent}%) in Storygraph library have been finished:",
         ], T::Array[String])
-        lines.concat(finished_books.take(limit).map { |book| book.to_s(indent_level: 1) })
+        lines.concat(finished_books.take(limit).map { |book| book.to_s(indent_level: 1, stylize: stylize) })
         lines << "#{Util::TAB}..." if total_finished > limit
         lines << ""
         lines.join("\n")
