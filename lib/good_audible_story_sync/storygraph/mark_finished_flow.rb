@@ -66,14 +66,14 @@ module GoodAudibleStorySync
         title_and_author = @current_book.title_and_author(stylize: true)
 
         if storygraph_finish_date.nil?
-          puts "#{Util::INFO_EMOJI} Storygraph book #{title_and_author} not marked as finished"
+          puts "#{Util::INFO_EMOJI} Storygraph book #{title_and_author} has no finish date"
           prompt_user_about_current_book
         elsif storygraph_finish_date == @current_finish_date
           puts "#{Util::SUCCESS_EMOJI} Storygraph book #{title_and_author} already " \
             "marked as finished on #{Util.pretty_date(@current_finish_date)}"
         else
           puts "#{Util::WARNING_EMOJI} #{title_and_author}"
-          puts "#{Util::TAB}Storygraph read date: #{Util.pretty_date(storygraph_finish_date)}"
+          puts "#{Util::TAB}Storygraph finish date: #{Util.pretty_date(storygraph_finish_date)}"
           puts "#{Util::TAB}Versus Audible: #{Util.pretty_date(T.must(@current_finish_date))}"
           prompt_user_about_current_book
         end
