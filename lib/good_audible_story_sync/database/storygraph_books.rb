@@ -28,11 +28,15 @@ module GoodAudibleStorySync
           puts "#{Util::INFO_EMOJI} Adding isbn column to #{TABLE_NAME}..."
           @db.execute("ALTER TABLE #{TABLE_NAME} ADD COLUMN isbn TEXT")
         end
+        unless Client.column_exists?(db: @db, table_name: TABLE_NAME, column_name: "status")
+          puts "#{Util::INFO_EMOJI} Adding status column to #{TABLE_NAME}..."
+          @db.execute("ALTER TABLE #{TABLE_NAME} ADD COLUMN status TEXT")
+        end
       end
 
       sig { returns T::Array[T::Hash[String, T.untyped]] }
       def find_all
-        @db.execute("SELECT id, title, author, finished_on " \
+        @db.execute("SELECT id, title, author, finished_on, status " \
           "FROM #{TABLE_NAME} ORDER BY finished_on DESC, title ASC, id ASC")
       end
 
@@ -48,20 +52,22 @@ module GoodAudibleStorySync
           title: T.nilable(String),
           author: T.nilable(String),
           finished_on: T.nilable(T.any(String, Date)),
-          isbn: T.nilable(String)
+          isbn: T.nilable(String),
+          status: T.nilable(String)
         ).void
       end
-      def upsert(id:, title:, author:, finished_on:, isbn:)
+      def upsert(id:, title:, author:, finished_on:, isbn:, status:)
         puts "#{Util::INFO_EMOJI} Saving Storygraph book #{id}..."
         finished_on_str = if finished_on.respond_to?(:iso8601)
           T.unsafe(finished_on).iso8601
         else
           finished_on
         end
-        values = [id, title, author, finished_on_str, isbn]
-        @db.execute("INSERT INTO #{TABLE_NAME} (id, title, author, finished_on, isbn) " \
-          "VALUES (?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET title=excluded.title, " \
-          "author=excluded.author, finished_on=excluded.finished_on, isbn=excluded.isbn", values)
+        values = [id, title, author, finished_on_str, isbn, status]
+        @db.execute("INSERT INTO #{TABLE_NAME} (id, title, author, finished_on, isbn, status) " \
+          "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET title=excluded.title, " \
+          "author=excluded.author, finished_on=excluded.finished_on, isbn=excluded.isbn, " \
+          "status=excluded.status", values)
       end
     end
   end

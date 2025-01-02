@@ -9,27 +9,38 @@ module GoodAudibleStorySync
     class Book
       extend T::Sig
 
+      class Status < T::Enum
+        enums do
+          CurrentlyReading = new("currently reading")
+          DidNotFinish = new("did not finish")
+          ToRead = new("to read")
+          Read = new("read")
+        end
+      end
+
       # Public: From .book-pane element on a URL like
       # https://app.thestorygraph.com/books-read/cheshire137.
       sig do
         params(
-          node: Nokogiri::XML::Element,
+          book_pane: Nokogiri::XML::Element,
           page: Mechanize::Page,
           extra_data: T::Hash[String, T.untyped]
         ).returns(Book)
       end
-      def self.from_read_book(node, page:, extra_data: {})
-        title_link = node.at(".book-title-author-and-series h3 a")
+      def self.from_read_book(book_pane, page:, extra_data: {})
+        title_link = book_pane.at(".book-title-author-and-series h3 a")
         raise "No title link found on #{page.uri}" unless title_link
 
-        author_el = node.search(".book-title-author-and-series p").last
+        author_el = book_pane.search(".book-title-author-and-series p").last
+        read_status_label = book_pane.at(".read-status-label")
 
         new({
           "title" => Util.squish(title_link.text.strip),
           "author" => Util.squish(author_el&.text&.strip),
           "url" => "#{page.uri.origin}#{title_link["href"]}",
-          "id" => node["data-book-id"],
-          "finished_on" => extract_finish_date(node),
+          "id" => book_pane["data-book-id"],
+          "finished_on" => extract_finish_date(book_pane),
+          "status" => status_from_read_status_label(read_status_label),
         }.merge(extra_data))
       end
 
@@ -48,6 +59,7 @@ module GoodAudibleStorySync
         end
 
         author_link = page.at(".book-title-author-and-series a")
+        read_status_label = page.at(".read-status-label")
 
         new({
           "id" => book_id,
@@ -55,7 +67,15 @@ module GoodAudibleStorySync
           "author" => Util.squish(author_link&.text&.strip),
           "url" => page.uri.to_s,
           "finished_on" => extract_finish_date(page),
+          "status" => status_from_read_status_label(read_status_label),
         }.merge(extra_data))
+      end
+
+      sig { params(read_status_label: T.nilable(Nokogiri::XML::Element)).returns(T.nilable(Status)) }
+      def self.status_from_read_status_label(read_status_label)
+        return unless read_status_label
+        read_status = read_status_label.text.strip.downcase
+        Status.try_deserialize(read_status)
       end
 
       sig { params(data: T::Hash[String, T.untyped]).void }
@@ -79,7 +99,22 @@ module GoodAudibleStorySync
 
       sig { returns T::Boolean }
       def finished?
-        !finished_on.nil?
+        !finished_on.nil? || status == Status::Read
+      end
+
+      sig { returns T::Boolean }
+      def currently_reading?
+        status == Status::CurrentlyReading
+      end
+
+      sig { returns T::Boolean }
+      def did_not_finish?
+        status == Status::DidNotFinish
+      end
+
+      sig { returns T::Boolean }
+      def want_to_read?
+        status == Status::ToRead
       end
 
       sig { params(other_book: Book).returns(T::Boolean) }
@@ -114,6 +149,12 @@ module GoodAudibleStorySync
         @data["isbn"]
       end
 
+      sig { returns T.nilable(Status) }
+      def status
+        value = @data["status"]
+        Status.try_deserialize(value) if value
+      end
+
       sig { params(stylize: T::Boolean).returns(T.nilable(String)) }
       def title(stylize: false)
         value = @data["title"]
@@ -144,7 +185,7 @@ module GoodAudibleStorySync
         return false unless id
 
         books_db.upsert(id: id, title: title, author: author, finished_on: finished_on,
-          isbn: isbn)
+          isbn: isbn, status: status&.serialize)
 
         true
       end
@@ -152,7 +193,7 @@ module GoodAudibleStorySync
       sig { params(indent_level: Integer, stylize: T::Boolean).returns(String) }
       def to_s(indent_level: 0, stylize: false)
         line1 = "#{Util::TAB * indent_level}#{title_and_author(stylize: stylize)}" \
-          "#{finish_status(stylize: stylize)}"
+          "#{status_summary(stylize: stylize)}"
         lines = [
           line1,
           "#{Util::TAB * (indent_level + 1)}#{Util::NEWLINE_EMOJI} #{url(stylize: stylize)}",
@@ -173,15 +214,23 @@ module GoodAudibleStorySync
       end
 
       sig { params(prefix: String, stylize: T::Boolean).returns(T.nilable(String)) }
-      def finish_status(prefix: " - ", stylize: false)
+      def status_summary(prefix: " - ", stylize: false)
         finished_on = self.finished_on
-        value = if finished_on
-          "#{prefix}Finished #{Util.pretty_date(finished_on)}"
+        suffix = if finished_on
+          "Finished #{Util.pretty_date(finished_on)}"
         elsif finished?
-          "#{prefix}Finished"
+          "Finished"
+        elsif currently_reading?
+          "Currently reading"
+        elsif did_not_finish?
+          "Did not finish"
+        elsif want_to_read?
+          "Want to read"
+        else
+          status&.serialize || "Unknown"
         end
-        return value unless value && stylize
-        Rainbow(value).italic
+        value = "#{prefix}#{suffix}"
+        stylize ? Rainbow(value).italic : value
       end
 
       sig { returns String }
