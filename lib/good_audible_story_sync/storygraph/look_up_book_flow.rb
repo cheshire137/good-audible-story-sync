@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 # typed: true
 
+require "rainbow"
+
 module GoodAudibleStorySync
   module Storygraph
     class LookUpBookFlow
@@ -57,10 +59,18 @@ module GoodAudibleStorySync
 
       sig { returns T.any(UserCommand, String) }
       def get_user_command_or_query
-        print "Enter a search query or command: "
-        input = gets.chomp
-        cmd = UserCommand.try_deserialize(input)
-        cmd || input
+        input = T.let(nil, T.nilable(String))
+        while input.nil?
+          print "Enter a search query or command: "
+          input = gets.chomp
+          if input.empty?
+            puts "Invalid selection"
+          else
+            cmd = UserCommand.try_deserialize(input)
+            return cmd if cmd
+          end
+        end
+        input
       end
 
       sig { params(cmd: UserCommand).void }
@@ -94,6 +104,8 @@ module GoodAudibleStorySync
         book = @client.load_book_search_result(result, extra_data: extra_data)
         book.save_to_database(@books_db)
         puts book.to_s(stylize: true)
+        @results = []
+        @query = nil
       end
 
       sig { void }
@@ -104,17 +116,33 @@ module GoodAudibleStorySync
           puts "#{Util::INFO_EMOJI} No results found for \"#{@query}\""
           return
         end
-        total_results = @results.size
-        units = total_results == 1 ? "result" : "results"
-        puts "#{Util::INFO_EMOJI} Found #{total_results} #{units}:"
         prompt_user_to_pick_search_result
       end
 
       sig { void }
       def display_search_results
+        total_results = @results.size
+        units = total_results == 1 ? "result" : "results"
+        puts "#{Util::INFO_EMOJI} Showing #{total_results} search #{units}:"
         @results.each_with_index do |link, i|
-          puts "#{i + 1}) #{Util.squish(link.text)}"
+          display_search_result(link, i + 1)
         end
+      end
+
+      sig { params(link: Mechanize::Page::Link, number: Integer).void }
+      def display_search_result(link, number)
+        node = link.node
+        title = Util.squish(node.at("h1:not(.sr-only)")&.text)
+        author = Util.squish(node.at("h2:not(.sr-only)")&.text)
+        highlighted_number = Rainbow(number.to_s).green
+        print "#{highlighted_number}) "
+        if title && author
+          puts Rainbow(title).underline + " by #{author}"
+        else
+          puts link.text
+        end
+        url = Rainbow(link.resolved_uri.to_s).blue
+        puts "#{Util::TAB}#{Util::NEWLINE_EMOJI} #{url}"
       end
 
       sig { void }
