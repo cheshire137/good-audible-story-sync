@@ -101,10 +101,10 @@ module GoodAudibleStorySync
         true
       end
 
-      sig { params(db_client: Database::Client).void }
-      def update_sync_time(db_client)
+      sig { params(sync_times_db: Database::SyncTimes).void }
+      def update_sync_time(sync_times_db)
         puts "#{Util::SAVE_EMOJI} Updating time Storygraph library was last cached..."
-        db_client.sync_times.touch(SYNC_TIME_KEY)
+        sync_times_db.touch(SYNC_TIME_KEY)
       end
 
       sig { params(db_client: Database::Client).returns(Integer) }
@@ -116,7 +116,7 @@ module GoodAudibleStorySync
           success = book.save_to_database(books_db)
           total_saved += 1 if success
         end
-        update_sync_time(db_client)
+        update_sync_time(db_client.sync_times)
         total_saved
       end
 
