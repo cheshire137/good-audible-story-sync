@@ -148,7 +148,7 @@ module GoodAudibleStorySync
       sig { void }
       def prompt_user_to_pick_search_result
         print_options
-        print "Choose a book (1-#{@results.size}): "
+        print "Make a selection: "
         input = gets.chomp
         cmd = UserCommand.try_deserialize(input)
         if cmd
