@@ -135,14 +135,19 @@ module GoodAudibleStorySync
         end
         return unless result_link
 
-        page = result_link.click
+        load_book_search_result(result_link, extra_data: { "isbn" => isbn })
+      end
+
+      sig { params(link: Mechanize::Page::Link, extra_data: T::Hash[String, T.untyped]).returns(Book) }
+      def load_book_search_result(link, extra_data: {})
+        page = link.click
 
         other_edition_link = page.link_with(text: /You've read another edition/)
         if other_edition_link
           page = other_edition_link.click
         end
 
-        Book.from_book_page(page, extra_data: { "isbn" => isbn })
+        Book.from_book_page(page, extra_data: extra_data)
       end
 
       # e.g., https://app.thestorygraph.com/search?search_term=midnight%20chernobyl
