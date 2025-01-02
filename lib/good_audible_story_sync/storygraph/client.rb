@@ -22,6 +22,19 @@ module GoodAudibleStorySync
         @auth = auth
       end
 
+      sig { params(book_id: String).returns(T::Boolean) }
+      def mark_as_read(book_id)
+        page = get("/books/#{book_id}")
+        action_regex = /book_id=#{book_id}&status=read/
+        form = page.forms.detect { |f| f.action =~ action_regex }
+        unless form
+          puts "#{Util::ERROR_EMOJI} Could not find form to mark book as read"
+          return false
+        end
+        form.submit
+        true
+      end
+
       sig { params(book_id: String, finish_date: Date).returns(T::Boolean) }
       def set_read_date(book_id, finish_date)
         page = get("/books/#{book_id}")
