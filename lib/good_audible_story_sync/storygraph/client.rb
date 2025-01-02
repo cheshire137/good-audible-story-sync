@@ -128,8 +128,7 @@ module GoodAudibleStorySync
 
       sig { params(isbn: String).returns(T.nilable(Book)) }
       def find_by_isbn(isbn)
-        result_links = search(isbn).reject { |l| l.text.strip.start_with?("View all results") }
-        result_link = result_links.first
+        result_link = search(isbn).first
         return unless result_link
 
         page = result_link.click
@@ -152,7 +151,8 @@ module GoodAudibleStorySync
         search_results_list = page.at("#search-results-ul")
         return [] unless search_results_list
 
-        page.links.select { |link| link.node.ancestors.include?(search_results_list) }
+        links = page.links.select { |link| link.node.ancestors.include?(search_results_list) }
+        links.reject { |link| link.text.strip.start_with?("View all results") }
       end
 
       private
