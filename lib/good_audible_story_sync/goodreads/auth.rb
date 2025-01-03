@@ -38,8 +38,8 @@ module GoodAudibleStorySync
         @password = data["password"]
       end
 
-      sig { void }
-      def sign_in
+      sig { params(session_id: String, session_token: String, session_id_time: String, sess_at_main: String, ubid_main: String, x_main: String, at_main: String).void }
+      def sign_in(session_id:, session_token:, session_id_time:, sess_at_main:, ubid_main:, x_main:, at_main:)
         raise AuthError.new("Cannot sign in without credentials") if @email.nil? || @password.nil?
 
         puts "#{Util::INFO_EMOJI} Signing into Goodreads as #{@email}..."
@@ -64,14 +64,32 @@ module GoodAudibleStorySync
 
         email_field.value = @email
         password_field.value = @password
-        page_after_sign_in = begin
+        begin
           sign_in_form.submit
         rescue Mechanize::ResponseCodeError => err
           raise AuthError.new("Error signing into Goodreads: #{err}")
         end
 
-        successful_sign_in = !self.class.sign_in_page?(page_after_sign_in)
-        raise AuthError.new("Could not log in to Goodreads") unless successful_sign_in
+        set_cookie("session-id", session_id)
+        set_cookie("session-token", session_token)
+        set_cookie("session-id-time", session_id_time)
+        set_cookie("sess-at-main", sess_at_main)
+        set_cookie("ubid-main", ubid_main)
+        set_cookie("x-main", x_main)
+        set_cookie("likely_has_account", "true")
+        set_cookie("at_main", at_main)
+
+        # successful_sign_in = !self.class.sign_in_page?(page_after_sign_in)
+        # raise AuthError.new("Could not log in to Goodreads") unless successful_sign_in
+      end
+
+      def set_cookie(key, value)
+        uri = agent.history.last.uri
+        puts "#{Util::INFO_EMOJI} Setting cookie #{key} for #{uri}"
+        cookie = Mechanize::Cookie.new(key, value)
+        cookie.domain = ".goodreads.com"
+        cookie.path = "/"
+        @agent.cookie_jar.add(uri, cookie)
       end
 
       sig { params(path: String).returns(Mechanize::Page) }
