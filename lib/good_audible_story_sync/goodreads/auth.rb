@@ -48,19 +48,28 @@ module GoodAudibleStorySync
         rescue Errno::ETIMEDOUT => err
           raise AuthError.new("Failed to load Goodreads: #{err}")
         end
+
         email_sign_in_link = T.let(select_sign_in_page.link_with(text: /Sign in with email/),
           T.nilable(Mechanize::Page::Link))
         raise AuthError.new("Failed to find sign-in link on #{select_sign_in_page.uri}") unless email_sign_in_link
+
         email_sign_in_page = email_sign_in_link.click
         sign_in_form = T.let(email_sign_in_page.form_with(name: "signIn"), T.nilable(Mechanize::Form))
         raise AuthError.new("Could not find sign-in form on #{email_sign_in_page.uri}") unless sign_in_form
-        sign_in_form["email"] = @email
-        sign_in_form["password"] = @password
+
+        email_field = sign_in_form.field_with(name: "email")
+        raise AuthError.new("Could not find email field in sign-in form") unless email_field
+        password_field = sign_in_form.field_with(name: "password")
+        raise AuthError.new("Could not find password field in sign-in form") unless password_field
+
+        email_field.value = @email
+        password_field.value = @password
         page_after_sign_in = begin
           sign_in_form.submit
         rescue Mechanize::ResponseCodeError => err
           raise AuthError.new("Error signing into Goodreads: #{err}")
         end
+
         successful_sign_in = !self.class.sign_in_page?(page_after_sign_in)
         raise AuthError.new("Could not log in to Goodreads") unless successful_sign_in
       end
