@@ -9,6 +9,7 @@ module GoodAudibleStorySync
       extend T::Sig
 
       BASE_URL = "https://app.thestorygraph.com"
+      CREDENTIALS_DB_KEY = "storygraph"
 
       class AuthError < StandardError; end
 
@@ -68,12 +69,12 @@ module GoodAudibleStorySync
 
       sig { params(cred_client: Database::Credentials).void }
       def save_to_database(cred_client)
-        cred_client.upsert(key: "storygraph", value: to_h)
+        cred_client.upsert(key: CREDENTIALS_DB_KEY, value: to_h)
       end
 
       sig { params(cred_client: Database::Credentials).returns(T::Boolean) }
       def load_from_database(cred_client)
-        storygraph_data = cred_client.find(key: "storygraph")
+        storygraph_data = cred_client.find(key: CREDENTIALS_DB_KEY)
         unless storygraph_data
           puts "#{Util::INFO_EMOJI} No Storygraph credentials found in database"
           return false

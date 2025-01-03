@@ -15,6 +15,7 @@ module GoodAudibleStorySync
 
       US_MARKETPLACE_ID = "AF2M0KC94RCEA"
       US_DOMAIN = "com"
+      CREDENTIALS_DB_KEY = "audible"
 
       class InvalidTokenError < StandardError; end
       class ForbiddenError < StandardError; end
@@ -224,7 +225,7 @@ module GoodAudibleStorySync
 
       sig { params(cred_client: Database::Credentials).void }
       def save_to_database(cred_client)
-        cred_client.upsert(key: "audible", value: to_h)
+        cred_client.upsert(key: CREDENTIALS_DB_KEY, value: to_h)
       end
 
       sig { returns T::Boolean }
@@ -234,7 +235,7 @@ module GoodAudibleStorySync
 
       sig { params(creds_db: Database::Credentials).returns(T::Boolean) }
       def load_from_database(creds_db)
-        audible_data = creds_db.find(key: "audible")
+        audible_data = creds_db.find(key: CREDENTIALS_DB_KEY)
         unless audible_data
           puts "#{Util::INFO_EMOJI} No Audible credentials found in database"
           return false
