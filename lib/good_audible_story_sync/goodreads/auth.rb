@@ -86,7 +86,10 @@ module GoodAudibleStorySync
         raise Error.new("Could not log in to Goodreads") unless successful_sign_in
 
         profile_page = profile_link.click
-        @profile_name = profile_page.at("h1")&.text&.strip
+        profile_header = profile_page.at("h1")
+        @profile_name = if profile_header
+          profile_header.text.strip.split(/\n/).first
+        end
         user_id_and_slug = profile_page.uri.path.split("/").last # e.g., "21047466-cheshire"
         @user_id, @slug = user_id_and_slug.split("-")
         puts "#{Util::SUCCESS_EMOJI} Signed in to Goodreads as #{@profile_name}"
