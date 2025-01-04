@@ -126,6 +126,23 @@ module GoodAudibleStorySync
         lines.join("\n")
       end
 
+      sig { returns String }
+      def inspect
+        @data.inspect
+      end
+
+      sig { returns T::Hash[String, T.untyped] }
+      def to_h
+        @data.dup
+      end
+
+      sig { params(books_db: Database::GoodreadsBooks).returns(T::Boolean) }
+      def save_to_database(books_db)
+        books_db.upsert(slug: slug, title: title, author: author,
+          isbn: nil, status: status&.serialize)
+        true
+      end
+
       sig { params(prefix: String, stylize: T::Boolean).returns(T.nilable(String)) }
       def status_summary(prefix: " - ", stylize: false)
         suffix = if finished?
