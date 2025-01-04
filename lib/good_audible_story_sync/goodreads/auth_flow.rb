@@ -21,7 +21,7 @@ module GoodAudibleStorySync
       sig { returns T.nilable(Auth) }
       def run
         load_from_database || log_in_via_website
-      rescue Auth::AuthError
+      rescue Auth::Error
         puts "Failed to sign in to Goodreads."
         nil
       end
@@ -38,7 +38,7 @@ module GoodAudibleStorySync
 
         begin
           auth.sign_in
-        rescue Auth::AuthError => err
+        rescue Auth::Error => err
           puts "#{Util::ERROR_EMOJI} Failed to sign in to Goodreads: #{err.message}"
           return nil
         end
@@ -57,7 +57,7 @@ module GoodAudibleStorySync
 
         auth = begin
           Auth.sign_in(email: email, password: password)
-        rescue Auth::AuthError => err
+        rescue Auth::Error => err
           puts "#{Util::ERROR_EMOJI} Failed to sign in to Goodreads: #{err.message}"
           return nil
         end

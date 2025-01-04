@@ -8,7 +8,7 @@ module GoodAudibleStorySync
     class Auth
       extend T::Sig
 
-      class AuthError < StandardError; end
+      class Error < StandardError; end
 
       BASE_URL = "https://www.goodreads.com"
       CREDENTIALS_DB_KEY = "goodreads"
@@ -44,45 +44,45 @@ module GoodAudibleStorySync
 
       sig { returns(T.untyped) }
       def sign_in
-        raise AuthError.new("Cannot sign in without credentials") if @email.nil? || @password.nil?
+        raise Error.new("Cannot sign in without credentials") if @email.nil? || @password.nil?
 
         puts "#{Util::INFO_EMOJI} Signing into Goodreads as #{@email}..."
         select_sign_in_page = begin
           get("/user/sign_in")
         rescue Errno::ETIMEDOUT => err
-          raise AuthError.new("Failed to load Goodreads: #{err}")
+          raise Error.new("Failed to load Goodreads: #{err}")
         end
 
         email_sign_in_link = T.let(select_sign_in_page.link_with(text: /Sign in with email/),
           T.nilable(Mechanize::Page::Link))
-        raise AuthError.new("Failed to find sign-in link on #{select_sign_in_page.uri}") unless email_sign_in_link
+        raise Error.new("Failed to find sign-in link on #{select_sign_in_page.uri}") unless email_sign_in_link
 
         email_sign_in_page = email_sign_in_link.click
         sign_in_form = T.let(email_sign_in_page.form_with(name: "signIn"), T.nilable(Mechanize::Form))
-        raise AuthError.new("Could not find sign-in form on #{email_sign_in_page.uri}") unless sign_in_form
+        raise Error.new("Could not find sign-in form on #{email_sign_in_page.uri}") unless sign_in_form
 
         email_field = sign_in_form.field_with(name: "email")
-        raise AuthError.new("Could not find email field in sign-in form") unless email_field
+        raise Error.new("Could not find email field in sign-in form") unless email_field
         password_field = sign_in_form.field_with(name: "password")
-        raise AuthError.new("Could not find password field in sign-in form") unless password_field
+        raise Error.new("Could not find password field in sign-in form") unless password_field
 
         email_field.value = @email
         password_field.value = @password
         page_after_sign_in = begin
           sign_in_form.submit
         rescue Mechanize::ResponseCodeError => err
-          raise AuthError.new("Error signing into Goodreads: #{err}")
+          raise Error.new("Error signing into Goodreads: #{err}")
         end
 
         cookieless_message_el = page_after_sign_in.at("#ap_error_page_cookieless_message")
         if cookieless_message_el
-          raise AuthError.new("Could not sign in to Goodreads without cookies: " \
+          raise Error.new("Could not sign in to Goodreads without cookies: " \
             "#{Util.squish(cookieless_message_el.text)}")
         end
 
         profile_link = T.let(page_after_sign_in.link_with(text: "Profile"), T.nilable(Mechanize::Page::Link))
         successful_sign_in = !profile_link.nil? && !self.class.sign_in_page?(page_after_sign_in)
-        raise AuthError.new("Could not log in to Goodreads") unless successful_sign_in
+        raise Error.new("Could not log in to Goodreads") unless successful_sign_in
 
         profile_page = profile_link.click
         @profile_name = profile_page.at("h1")&.text&.strip

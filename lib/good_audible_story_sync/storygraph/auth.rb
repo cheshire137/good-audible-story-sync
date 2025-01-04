@@ -11,7 +11,7 @@ module GoodAudibleStorySync
       BASE_URL = "https://app.thestorygraph.com"
       CREDENTIALS_DB_KEY = "storygraph"
 
-      class AuthError < StandardError; end
+      class Error < StandardError; end
 
       sig { params(email: String, password: String).returns(Auth) }
       def self.sign_in(email:, password:)
@@ -41,13 +41,13 @@ module GoodAudibleStorySync
 
       sig { void }
       def sign_in
-        raise AuthError.new("Cannot sign in without credentials") if @email.nil? || @password.nil?
+        raise Error.new("Cannot sign in without credentials") if @email.nil? || @password.nil?
 
         puts "#{Util::INFO_EMOJI} Signing into Storygraph as #{@email}..."
         page = begin
           @agent.get("#{BASE_URL}/users/sign_in")
         rescue Errno::ETIMEDOUT => err
-          raise AuthError.new("Failed to load sign-in page: #{err}")
+          raise Error.new("Failed to load sign-in page: #{err}")
         end
         sign_in_form = page.form_with(action: "/users/sign_in") do |form|
           form["user[email]"] = @email
@@ -56,10 +56,10 @@ module GoodAudibleStorySync
         page_after_sign_in = sign_in_form.submit
         profile_link = page_after_sign_in.link_with(text: "Profile")
         successful_sign_in = !profile_link.nil? && !self.class.sign_in_page?(page_after_sign_in)
-        raise AuthError.new("Invalid credentials") unless successful_sign_in
+        raise Error.new("Invalid credentials") unless successful_sign_in
 
         @username = profile_link.href.split("/profile/").last
-        puts "#{Util::INFO_EMOJI} Successfully signed in to Storygraph as #{username}"
+        puts "#{Util::SUCCESS_EMOJI} Successfully signed in to Storygraph as #{username}"
       end
 
       sig { returns T::Hash[String, T.untyped] }
