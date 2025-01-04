@@ -36,6 +36,9 @@ module GoodAudibleStorySync
       sig { returns AudibleBooks }
       attr_reader :audible_books
 
+      sig { returns GoodreadsBooks }
+      attr_reader :goodreads_books
+
       sig { returns StorygraphBooks }
       attr_reader :storygraph_books
 
@@ -49,6 +52,7 @@ module GoodAudibleStorySync
         @cipher = cipher || Util::Cipher.new
         @credentials = Credentials.new(db_client: self)
         @audible_books = AudibleBooks.new(db: @db)
+        @goodreads_books = GoodreadsBooks.new(db: @db)
         @storygraph_books = StorygraphBooks.new(db: @db)
         @sync_times = SyncTimes.new(db: @db)
       end
@@ -57,6 +61,7 @@ module GoodAudibleStorySync
       def create_tables
         @audible_books.create_table
         @storygraph_books.create_table
+        @goodreads_books.create_table
         @credentials.create_table
         @sync_times.create_table
       end
