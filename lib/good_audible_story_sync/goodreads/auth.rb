@@ -11,6 +11,7 @@ module GoodAudibleStorySync
       class AuthError < StandardError; end
 
       BASE_URL = "https://www.goodreads.com"
+      CREDENTIALS_DB_KEY = "goodreads"
 
       sig { params(email: String, password: String).returns(Auth) }
       def self.sign_in(email:, password:)
@@ -95,6 +96,26 @@ module GoodAudibleStorySync
       sig { returns T::Hash[String, T.untyped] }
       def to_h
         { "email" => @email, "password" => @password, "profile_name" => @profile_name }
+      end
+
+      sig { params(cred_client: Database::Credentials).void }
+      def save_to_database(cred_client)
+        cred_client.upsert(key: CREDENTIALS_DB_KEY, value: to_h)
+      end
+
+      sig { params(cred_client: Database::Credentials).returns(T::Boolean) }
+      def load_from_database(cred_client)
+        goodreads_data = cred_client.find(key: CREDENTIALS_DB_KEY)
+        unless goodreads_data
+          puts "#{Util::INFO_EMOJI} No Goodreads credentials found in database"
+          return false
+        end
+
+        @email = goodreads_data["email"]
+        @password = goodreads_data["password"]
+        @profile_name = goodreads_data["profile_name"]
+
+        true
       end
     end
   end
