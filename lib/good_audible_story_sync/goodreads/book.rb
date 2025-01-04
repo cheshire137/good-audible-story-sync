@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 # typed: true
 
+require "rainbow"
 require "uri"
 
 module GoodAudibleStorySync
@@ -49,9 +50,11 @@ module GoodAudibleStorySync
         @data["slug"]
       end
 
-      sig { returns T.nilable(String) }
-      def title
-        @data["title"]
+      sig { params(stylize: T::Boolean).returns(T.nilable(String)) }
+      def title(stylize: false)
+        value = @data["title"]
+        return value unless stylize && value
+        Rainbow(value).underline
       end
 
       sig { returns T.nilable(String) }
@@ -71,9 +74,66 @@ module GoodAudibleStorySync
         status == Status::Read
       end
 
-      sig { returns T.nilable(String) }
-      def url
-        @data["url"]
+      sig { returns T::Boolean }
+      def currently_reading?
+        status == Status::CurrentlyReading
+      end
+
+      sig { returns T::Boolean }
+      def want_to_read?
+        status == Status::WantToRead
+      end
+
+      sig { params(stylize: T::Boolean).returns(T.nilable(String)) }
+      def url(stylize: false)
+        @url_by_stylize ||= {}
+        return @url_by_stylize[stylize] if @url_by_stylize[stylize]
+        value = @data["url"] || "#{Client::BASE_URL}/book/show/#{slug}"
+        @url_by_stylize[stylize] = if stylize
+          Rainbow(value).blue
+        else
+          value
+        end
+      end
+
+      sig { params(stylize: T::Boolean).returns(String) }
+      def title_and_author(stylize: false)
+        @title_and_author_by_stylize ||= {}
+        return @title_and_author_by_stylize[stylize] if @title_and_author_by_stylize[stylize]
+        author = self.author
+        @title_and_author_by_stylize[stylize] = if author && !author.empty?
+          "#{title(stylize: stylize)} by #{author}"
+        else
+          title(stylize: stylize) || "Unknown (slug #{slug})"
+        end
+      end
+
+      sig { params(indent_level: Integer, stylize: T::Boolean).returns(String) }
+      def to_s(indent_level: 0, stylize: false)
+        line1 = "#{Util::TAB * indent_level}#{title_and_author(stylize: stylize)}" \
+          "#{status_summary(stylize: stylize)}"
+        lines = [
+          line1,
+          "#{Util::TAB * (indent_level + 1)}#{Util::NEWLINE_EMOJI} #{url(stylize: stylize)}",
+        ]
+        lines.join("\n")
+      end
+
+      sig { params(prefix: String, stylize: T::Boolean).returns(T.nilable(String)) }
+      def status_summary(prefix: " - ", stylize: false)
+        suffix = if finished?
+          "Finished"
+        elsif currently_reading?
+          "Currently reading"
+        elsif want_to_read?
+          "Want to read"
+        else
+          status&.serialize
+        end
+        if suffix
+          value = "#{prefix}#{suffix}"
+          stylize ? Rainbow(value).italic : value
+        end
       end
     end
   end
