@@ -34,6 +34,8 @@ module GoodAudibleStorySync
       sig { params(agent: T.nilable(Mechanize), data: T::Hash[String, T.nilable(String)]).void }
       def initialize(agent: nil, data: {})
         @agent = agent || Mechanize.new
+        # https://www.zytrax.com/tech/web/browser_ids.htm
+        @agent.user_agent = "Mozilla/5.0 (iPod; U; CPU iPhone OS 2_2_1 like Mac OS X; en-us) AppleWebKit/525.18.1 (KHTML, like Gecko) Version/3.1.1 Mobile/5H11a Safari/525.20"
         @email = data["email"]
         @password = data["password"]
       end
