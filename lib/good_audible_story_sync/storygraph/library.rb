@@ -123,7 +123,7 @@ module GoodAudibleStorySync
       sig { params(limit: Integer, stylize: T::Boolean).returns(String) }
       def finished_books_summary(limit: 5, stylize: false)
         lines = T.let([
-          "☑ #{total_finished} #{finished_book_units} " \
+          "#{Util::DONE_EMOJI} #{total_finished} #{finished_book_units} " \
             "(#{finished_percent}%) in Storygraph library have been finished:",
         ], T::Array[String])
         lines.concat(finished_books.take(limit).map { |book| book.to_s(indent_level: 1, stylize: stylize) })
