@@ -170,6 +170,14 @@ module GoodAudibleStorySync
       @storygraph_auth = maybe_auth
     end
 
+    sig { returns Goodreads::Auth }
+    def goodreads_auth
+      return @goodreads_auth if @goodreads_auth
+      maybe_auth = Goodreads::AuthFlow.run(credentials_db: db_client.credentials)
+      exit 1 if maybe_auth.nil?
+      @goodreads_auth = maybe_auth
+    end
+
     sig { returns Database::Client }
     def db_client
       @db_client ||= Database::Client.load(options.database_file, cipher: cipher)
