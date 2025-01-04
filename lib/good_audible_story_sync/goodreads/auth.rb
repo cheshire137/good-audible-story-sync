@@ -27,7 +27,7 @@ module GoodAudibleStorySync
       end
 
       sig { returns T.nilable(String) }
-      attr_reader :email, :profile_name
+      attr_reader :email, :profile_name, :user_id, :slug
 
       sig { returns Mechanize }
       attr_reader :agent
@@ -40,6 +40,8 @@ module GoodAudibleStorySync
         @email = T.let(data["email"], T.nilable(String))
         @password = T.let(data["password"], T.nilable(String))
         @profile_name = T.let(data["profile_name"], T.nilable(String))
+        @user_id = T.let(data["user_id"], T.nilable(String))
+        @slug = T.let(data["slug"], T.nilable(String))
       end
 
       sig { returns(T.untyped) }
@@ -86,6 +88,8 @@ module GoodAudibleStorySync
 
         profile_page = profile_link.click
         @profile_name = profile_page.at("h1")&.text&.strip
+        user_id_and_slug = profile_page.uri.path.split("/").last # e.g., "21047466-cheshire"
+        @user_id, @slug = user_id_and_slug.split("-")
         puts "#{Util::SUCCESS_EMOJI} Signed in to Goodreads as #{@profile_name}"
       end
 
@@ -96,7 +100,13 @@ module GoodAudibleStorySync
 
       sig { returns T::Hash[String, T.untyped] }
       def to_h
-        { "email" => @email, "password" => @password, "profile_name" => @profile_name }
+        {
+          "email" => @email,
+          "password" => @password,
+          "profile_name" => @profile_name,
+          "user_id" => @user_id,
+          "slug" => @slug,
+        }
       end
 
       sig { params(cred_client: Database::Credentials).void }
@@ -115,6 +125,8 @@ module GoodAudibleStorySync
         @email = goodreads_data["email"]
         @password = goodreads_data["password"]
         @profile_name = goodreads_data["profile_name"]
+        @user_id = goodreads_data["user_id"]
+        @slug = goodreads_data["slug"]
 
         true
       end
