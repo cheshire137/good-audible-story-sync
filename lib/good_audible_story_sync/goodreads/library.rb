@@ -73,7 +73,7 @@ module GoodAudibleStorySync
 
       sig { returns Integer }
       def total_books
-        @books_by_id.size
+        @books_by_slug.size
       end
 
       sig { returns Integer }
