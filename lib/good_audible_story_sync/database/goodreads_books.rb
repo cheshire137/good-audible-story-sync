@@ -52,7 +52,7 @@ module GoodAudibleStorySync
         puts "#{Util::INFO_EMOJI} Saving Goodreads book #{slug}..."
         values = [slug, title, author, isbn, status]
         @db.execute("INSERT INTO #{TABLE_NAME} (slug, title, author, isbn, status) " \
-          "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(slug) DO UPDATE SET title=excluded.title, " \
+          "VALUES (?, ?, ?, ?, ?) ON CONFLICT(slug) DO UPDATE SET title=excluded.title, " \
           "author=excluded.author, isbn=excluded.isbn, status=excluded.status", values)
       end
     end
