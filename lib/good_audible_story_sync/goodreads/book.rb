@@ -17,25 +17,32 @@ module GoodAudibleStorySync
         end
       end
 
-      # Public: From a `.bookList .book` element on the mobile view of a page like
+      # Public: From a `table#books tbody tr` element on a page like
       # https://www.goodreads.com/review/list/21047466-cheshire?shelf=read.
       sig { params(node: Nokogiri::XML::Element, page: Mechanize::Page).returns(Book) }
       def self.from_book_list(node, page:)
-        name_el = node.at("[itemprop=name]")
+        name_el = node.at(".field.title .value")
         raise "Could not find itemprop=name element for book list item on #{node.document.url}" unless name_el
         link = name_el.at("a")
         raise "Could not find book link for #{name_el.text} on #{node.document.url}" unless link
         url = URI.parse(link["href"])
         url.hostname ||= page.uri.hostname
         url.scheme ||= page.uri.scheme
-        author_el = node.at("[itemprop=author]")
-        current_shelf_el = node.at("[data-current-shelf]")
+        author_el = node.at(".field.author .value")
+        author = if author_el
+          value = author_el.text.strip
+          if value.include?(", ") # e.g., "Simmons, Dan"
+            value = value.split(", ").reverse.join(" ")
+          end
+          value
+        end
+        current_shelf_link = node.at(".field.shelves .value a")
         new({
           "title" => Util.squish(name_el.text),
           "url" => url, # e.g., "https://www.goodreads.com/book/show/11286.Carrion_Comfort"
           "slug" => url.path&.split("/")&.last, # e.g., "11286.Carrion_Comfort"
-          "author" => Util.squish(author_el&.at("div")&.text),
-          "status" => current_shelf_el ? current_shelf_el["data-current-shelf"] : nil, # e.g., "to-read"
+          "author" => author,
+          "status" => current_shelf_link&.text, # e.g., "to-read"
         })
       end
 
