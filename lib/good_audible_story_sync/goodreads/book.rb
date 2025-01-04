@@ -37,12 +37,14 @@ module GoodAudibleStorySync
           value
         end
         current_shelf_link = node.at(".field.shelves .value a")
+        isbn_el = node.at(".field.isbn .value")
         new({
           "title" => Util.squish(name_el.text),
           "url" => url, # e.g., "https://www.goodreads.com/book/show/11286.Carrion_Comfort"
           "slug" => url.path&.split("/")&.last, # e.g., "11286.Carrion_Comfort"
           "author" => author,
           "status" => current_shelf_link&.text, # e.g., "to-read"
+          "isbn" => isbn_el&.text&.strip,
         })
       end
 
@@ -55,6 +57,11 @@ module GoodAudibleStorySync
       sig { returns String }
       def slug
         @data["slug"]
+      end
+
+      sig { returns T.nilable(String) }
+      def isbn
+        @data["isbn"]
       end
 
       sig { params(stylize: T::Boolean).returns(T.nilable(String)) }
@@ -139,7 +146,7 @@ module GoodAudibleStorySync
       sig { params(books_db: Database::GoodreadsBooks).returns(T::Boolean) }
       def save_to_database(books_db)
         books_db.upsert(slug: slug, title: title, author: author,
-          isbn: nil, status: status&.serialize)
+          isbn: isbn, status: status&.serialize)
         true
       end
 
