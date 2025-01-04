@@ -11,6 +11,7 @@ module GoodAudibleStorySync
 
       BASE_URL = Auth::BASE_URL
 
+      class Error < StandardError; end
       class NotAuthenticatedError < StandardError; end
 
       sig { returns Mechanize }
@@ -20,6 +21,18 @@ module GoodAudibleStorySync
       def initialize(auth:)
         @agent = T.let(auth.agent, Mechanize)
         @auth = auth
+      end
+
+      sig { returns(Library) }
+      def get_read_books
+        page = get("/review/list/#{@auth.user_id}-#{@auth.slug}?shelf=read")
+        book_items = page.search(".bookList .book")
+        library = Library.new
+        book_items.each do |list_item|
+          book = Book.from_book_list(list_item)
+          library.add_book(book)
+        end
+        library
       end
 
       sig { params(path: String).returns(Mechanize::Page) }
