@@ -23,14 +23,21 @@ module GoodAudibleStorySync
         @auth = auth
       end
 
-      sig { returns(Library) }
-      def get_read_books
-        page = get("/review/list/#{@auth.user_id}-#{@auth.slug}?shelf=read")
-        book_items = page.search(".bookList .book")
+      # e.g., https://www.goodreads.com/review/list/21047466-cheshire?shelf=read
+      sig do
+        params(
+          page: Integer,
+          load_all_pages: T::Boolean,
+          process_book: T.nilable(T.proc.params(arg0: Book).void)
+        ).returns(Library)
+      end
+      def get_read_books(page: 1, load_all_pages: true, process_book: nil)
+        initial_page = get("/review/list/#{@auth.user_id}-#{@auth.slug}?shelf=read&page=#{page}")
         library = Library.new
-        book_items.each do |list_item|
-          book = Book.from_book_list(list_item)
+        books = get_read_books_on_page(page: initial_page, load_all_pages: load_all_pages)
+        books.each do |book|
           library.add_book(book)
+          process_book.call(book) if process_book
         end
         library
       end
@@ -43,6 +50,41 @@ module GoodAudibleStorySync
       end
 
       private
+
+      sig do
+        params(
+          path: T.nilable(String),
+          page: T.nilable(Mechanize::Page),
+          load_all_pages: T::Boolean
+        ).returns(T::Array[Book])
+      end
+      def get_read_books_on_page(path: nil, page: nil, load_all_pages: true)
+        if path
+          page = get(path)
+        elsif page.nil?
+          raise "Either a relative URL or a page must be provided"
+        end
+
+        book_elements = T.let(page.search("table#books tbody tr"), Nokogiri::XML::NodeSet)
+        books = book_elements.map { |el| Book.from_book_list(el, page: page) }
+        puts "#{Util::WARNING_EMOJI} No books found on #{page.uri}" if books.empty?
+
+        if load_all_pages
+          next_page_link = page.at("a.next_page")
+          if next_page_link
+            units = books.size == 1 ? "book" : "books"
+            print "#{Util::INFO_EMOJI} Found #{books.size} #{units} on page"
+            last_book = books.last
+            print ", ending with #{last_book.title_and_author}" if last_book
+            puts
+
+            books += get_read_books_on_page(path: next_page_link["href"],
+              load_all_pages: load_all_pages)
+          end
+        end
+
+        books
+      end
 
       sig { params(make_request: T.proc.returns(Mechanize::Page)).returns(Mechanize::Page) }
       def load_page(make_request)
