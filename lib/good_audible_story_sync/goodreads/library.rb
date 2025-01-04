@@ -8,6 +8,43 @@ module GoodAudibleStorySync
 
       SYNC_TIME_KEY = "goodreads_library"
 
+      sig { params(client: Client, db_client: Database::Client, options: Options).returns(Library) }
+      def self.load(client:, db_client:, options:)
+        library_cache_last_modified = db_client.sync_times.find(SYNC_TIME_KEY)&.to_time
+        library_is_cached = !library_cache_last_modified.nil?
+        should_refresh_library = library_cache_last_modified &&
+          library_cache_last_modified > options.refresh_cutoff_time
+
+        if library_is_cached && should_refresh_library
+          load_from_database(db_client.goodreads_books)
+        else
+          if library_is_cached
+            puts "#{Util::INFO_EMOJI} Goodreads library cache has not been updated " \
+              "since #{Util.pretty_time(library_cache_last_modified)}, updating..."
+          end
+          load_from_web(client: client, db_client: db_client)
+        end
+      end
+
+      sig { params(client: Client, db_client: Database::Client).returns(Library) }
+      def self.load_from_web(client:, db_client:)
+        books_db = db_client.goodreads_books
+        save_book = T.let(
+          ->(book) { book.save_to_database(books_db) },
+          T.proc.params(arg0: GoodAudibleStorySync::Goodreads::Book).void
+        )
+        library = client.get_read_books(process_book: save_book)
+        library.update_sync_time(db_client.sync_times)
+        library
+      end
+
+      sig { params(books_db: Database::GoodreadsBooks).returns(Library) }
+      def self.load_from_database(books_db)
+        library = new
+        library.load_from_database(books_db)
+        library
+      end
+
       sig { void }
       def initialize
         @books_by_slug = T.let({}, T::Hash[String, Book])
