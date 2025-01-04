@@ -86,6 +86,7 @@ module GoodAudibleStorySync
 
         profile_page = profile_link.click
         @profile_name = profile_page.at("h1")&.text&.strip
+        puts "#{Util::SUCCESS_EMOJI} Signed in to Goodreads as #{@profile_name}"
       end
 
       sig { params(path: String).returns(Mechanize::Page) }
