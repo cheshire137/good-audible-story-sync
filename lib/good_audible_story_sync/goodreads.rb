@@ -7,3 +7,4 @@ end
 
 require_relative "goodreads/auth"
 require_relative "goodreads/auth_flow"
+require_relative "goodreads/client"
