@@ -8,14 +8,14 @@ module GoodAudibleStorySync
     class AuthFlow
       extend T::Sig
 
-      sig { params(db_client: Database::Client).returns(T.nilable(Auth)) }
-      def self.run(db_client:)
-        new(db_client: db_client).run
+      sig { params(credentials_db: Database::Credentials).returns(T.nilable(Auth)) }
+      def self.run(credentials_db:)
+        new(credentials_db: credentials_db).run
       end
 
-      sig { params(db_client: Database::Client).void }
-      def initialize(db_client:)
-        @credentials_db = db_client.credentials
+      sig { params(credentials_db: Database::Credentials).void }
+      def initialize(credentials_db:)
+        @credentials_db = credentials_db
       end
 
       sig { returns T.nilable(Auth) }

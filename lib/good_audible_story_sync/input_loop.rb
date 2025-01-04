@@ -165,7 +165,7 @@ module GoodAudibleStorySync
     sig { returns Storygraph::Auth }
     def storygraph_auth
       return @storygraph_auth if @storygraph_auth
-      maybe_auth = Storygraph::AuthFlow.run(db_client: db_client)
+      maybe_auth = Storygraph::AuthFlow.run(credentials_db: db_client.credentials)
       exit 1 if maybe_auth.nil?
       @storygraph_auth = maybe_auth
     end
