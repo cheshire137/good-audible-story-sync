@@ -133,6 +133,7 @@ module GoodAudibleStorySync
 
         library = Library.new(total_books: total_books)
         books = get_read_books_on_page(page: initial_page, load_all_pages: load_all_pages)
+
         books.each do |book|
           library.add_book(book)
           process_book.call(book) if process_book
@@ -210,9 +211,8 @@ module GoodAudibleStorySync
         end
 
         book_elements = T.let(page.search(".read-books-panes .book-pane"), Nokogiri::XML::NodeSet)
-        books = book_elements.map do |book_element|
-          Book.from_read_book(book_element, page: page)
-        end
+        books = book_elements.map { |book_element| Book.from_read_book(book_element, page: page) }
+        puts "#{Util::WARNING_EMOJI} No books found on #{page.uri}" if books.empty?
 
         if load_all_pages
           next_page_link = page.at(".read-books #next_link")
