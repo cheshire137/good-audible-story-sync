@@ -11,6 +11,7 @@ module GoodAudibleStorySync
       enums do
         DisplayAudibleLibrary = new("a")
         DisplayAudibleUserProfile = new("p")
+        DisplayGoodreadsLibrary = new("g")
         DisplayStorygraphLibrary = new("s")
         UpdateStorygraphLibraryCache = new("c")
         MarkFinishedBooks = new("f")
@@ -48,6 +49,7 @@ module GoodAudibleStorySync
     def print_options
       print_option(UserCommand::DisplayAudibleLibrary, "display Audible library")
       print_option(UserCommand::DisplayAudibleUserProfile, "display Audible user profile")
+      print_option(UserCommand::DisplayGoodreadsLibrary, "display Goodreads library")
       print_option(UserCommand::DisplayStorygraphLibrary, "display Storygraph library")
       print_option(UserCommand::LookUpStorygraphBook, "look up book on Storygraph")
       print_option(UserCommand::UpdateStorygraphLibraryCache, "update Storygraph library cache")
@@ -77,6 +79,7 @@ module GoodAudibleStorySync
       case cmd
       when UserCommand::DisplayAudibleLibrary then display_audible_library
       when UserCommand::DisplayAudibleUserProfile then display_audible_user_profile
+      when UserCommand::DisplayGoodreadsLibrary then display_goodreads_library
       when UserCommand::DisplayStorygraphLibrary then display_storygraph_library
       when UserCommand::UpdateStorygraphLibraryCache then update_storygraph_library_cache
       when UserCommand::MarkFinishedBooks then mark_finished_books
@@ -104,6 +107,11 @@ module GoodAudibleStorySync
     end
 
     sig { void }
+    def display_goodreads_library
+      puts goodreads_library.to_s(stylize: true)
+    end
+
+    sig { void }
     def display_storygraph_library
       puts storygraph_library.to_s(stylize: true)
     end
@@ -112,6 +120,11 @@ module GoodAudibleStorySync
     def update_storygraph_library_cache
       @storygraph_library = Storygraph::Library.load_from_web(client: storygraph_client,
         db_client: db_client)
+    end
+
+    sig { returns Goodreads::Library }
+    def goodreads_library
+      @goodreads_library ||= Goodreads::Library.load(client: goodreads_client, db_client: db_client, options: options)
     end
 
     sig { returns Storygraph::Library }
@@ -155,6 +168,11 @@ module GoodAudibleStorySync
       maybe_auth = GoodAudibleStorySync::Audible::AuthFlow.run(db_client: db_client)
       exit 1 if maybe_auth.nil?
       @audible_auth = maybe_auth
+    end
+
+    sig { returns Goodreads::Client }
+    def goodreads_client
+      @goodreads_client ||= Goodreads::Client.new(auth: goodreads_auth)
     end
 
     sig { returns Storygraph::Client }
