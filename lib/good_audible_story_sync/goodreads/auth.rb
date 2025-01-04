@@ -26,7 +26,7 @@ module GoodAudibleStorySync
       end
 
       sig { returns T.nilable(String) }
-      attr_reader :email
+      attr_reader :email, :profile_name
 
       sig { returns Mechanize }
       attr_reader :agent
@@ -36,8 +36,9 @@ module GoodAudibleStorySync
         @agent = agent || Mechanize.new
         # https://www.zytrax.com/tech/web/browser_ids.htm
         @agent.user_agent = "Mozilla/5.0 (iPod; U; CPU iPhone OS 2_2_1 like Mac OS X; en-us) AppleWebKit/525.18.1 (KHTML, like Gecko) Version/3.1.1 Mobile/5H11a Safari/525.20"
-        @email = data["email"]
-        @password = data["password"]
+        @email = T.let(data["email"], T.nilable(String))
+        @password = T.let(data["password"], T.nilable(String))
+        @profile_name = T.let(data["profile_name"], T.nilable(String))
       end
 
       sig { returns(T.untyped) }
@@ -78,8 +79,12 @@ module GoodAudibleStorySync
             "#{Util.squish(cookieless_message_el.text)}")
         end
 
-        successful_sign_in = !self.class.sign_in_page?(page_after_sign_in)
+        profile_link = T.let(page_after_sign_in.link_with(text: "Profile"), T.nilable(Mechanize::Page::Link))
+        successful_sign_in = !profile_link.nil? && !self.class.sign_in_page?(page_after_sign_in)
         raise AuthError.new("Could not log in to Goodreads") unless successful_sign_in
+
+        profile_page = profile_link.click
+        @profile_name = profile_page.at("h1")&.text&.strip
       end
 
       sig { params(path: String).returns(Mechanize::Page) }
@@ -89,7 +94,7 @@ module GoodAudibleStorySync
 
       sig { returns T::Hash[String, T.untyped] }
       def to_h
-        { "email" => @email, "password" => @password }
+        { "email" => @email, "password" => @password, "profile_name" => @profile_name }
       end
     end
   end
