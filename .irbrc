@@ -21,6 +21,13 @@ def get_audible_client(db_client: nil, auth: nil, options: nil)
     credentials_db: (db_client || load_db_client).credentials)
 end
 
+def get_audible_library(audible_client: nil, db_client: nil, options: nil, auth: nil)
+  options ||= load_options
+  audible_client ||= get_audible_client(db_client: db_client, options: options, auth: auth)
+  GoodAudibleStorySync::Audible::Library.load_with_finish_times(client: audible_client,
+    options: options, db_client: db_client || load_db_client)
+end
+
 def get_storygraph_auth(db_client=nil)
   GoodAudibleStorySync::Storygraph::AuthFlow.run(credentials_db: (db_client || load_db_client).credentials)
 end
