@@ -34,11 +34,9 @@ module GoodAudibleStorySync
       def get_read_books(page: 1, load_all_pages: true, process_book: nil)
         initial_page = get("/review/list/#{@auth.user_id}-#{@auth.slug}?shelf=read&page=#{page}")
         library = Library.new
-        books = get_read_books_on_page(page: initial_page, load_all_pages: load_all_pages)
-        books.each do |book|
-          library.add_book(book)
-          process_book.call(book) if process_book
-        end
+        books = get_read_books_on_page(page: initial_page, load_all_pages: load_all_pages,
+          process_book: process_book)
+        books.each { |book| library.add_book(book) }
         library
       end
 
@@ -55,10 +53,11 @@ module GoodAudibleStorySync
         params(
           path: T.nilable(String),
           page: T.nilable(Mechanize::Page),
-          load_all_pages: T::Boolean
+          load_all_pages: T::Boolean,
+          process_book: T.nilable(T.proc.params(arg0: Book).void)
         ).returns(T::Array[Book])
       end
-      def get_read_books_on_page(path: nil, page: nil, load_all_pages: true)
+      def get_read_books_on_page(path: nil, page: nil, load_all_pages: true, process_book: nil)
         if path
           page = get(path)
         elsif page.nil?
@@ -68,6 +67,7 @@ module GoodAudibleStorySync
         book_elements = T.let(page.search("table#books tbody tr"), Nokogiri::XML::NodeSet)
         books = book_elements.map { |el| Book.from_book_list(el, page: page) }
         puts "#{Util::WARNING_EMOJI} No books found on #{page.uri}" if books.empty?
+        books.each { |book| process_book.call(book) } if process_book
 
         if load_all_pages
           next_page_link = page.at("a.next_page")
@@ -79,7 +79,7 @@ module GoodAudibleStorySync
             puts
 
             books += get_read_books_on_page(path: next_page_link["href"],
-              load_all_pages: load_all_pages)
+              load_all_pages: load_all_pages, process_book: process_book)
           end
         end
 
