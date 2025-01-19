@@ -4,10 +4,19 @@ Script to sync your read books from Audible to Goodreads and StoryGraph.
 
 ## How to use
 
-This is intended to be run from macOS.
+> [!NOTE]
+> This is intended to be run from macOS.
+
+Download the [latest release](https://github.com/cheshire137/good-audible-story-sync/releases/latest) of the gem. Install it via:
 
 ```sh
-bin/good-audible-story-sync
+gem install good-audible-story-sync.gem
+```
+
+There should now be a `good-audible-story-sync` executable in your path. Run it via:
+
+```sh
+good-audible-story-sync
 ```
 
 You will be prompted to log in to Audible and Storygraph. The tool saves your encrypted login
@@ -22,7 +31,7 @@ you finished reading and when.
 ### Options
 
 ```sh
-Usage: bin/good-audible-story-sync [options]
+Usage: good-audible-story-sync [options]
     -d DATABASE_FILE,                Path to Sqlite database file. Defaults to good_audible_story_sync.db.
         --database-file
     -e EXPIRATION_DAYS,              Max number of days to use cached data, such as Audible library, before refreshing. Defaults to 1.
@@ -32,7 +41,7 @@ Usage: bin/good-audible-story-sync [options]
 ### Sample output
 
 ```sh
-% bin/good-audible-story-sync
+% good-audible-story-sync
 🔐 Looking for 'good_audible_story_sync_encryption_key' in cheshire137's keychain...
 ℹ️ Using GoodAudibleStorySync encryption key from keychain
 ⚙️ Parsing options...
@@ -58,6 +67,29 @@ bin/good-audible-story-sync
 ```
 
 Run `srb tc` to run the [Sorbet type checker](https://sorbet.org/).
+
+### Creating a tag
+
+Update `VERSION` in [version.rb](./lib/good_audible_story_sync/version.rb).
+
+```sh
+git tag v0.0.x main # use the same version string as in `VERSION`
+git push origin tag v0.0.x
+```
+
+This will trigger a workflow that builds the gem and creates a new release.
+
+### Building the gem
+
+```sh
+gem build good_audible_story_sync.gemspec
+```
+
+This will create a file like project_pull_mover-0.0.1.gem which you can then install:
+
+```sh
+gem install good_audible_story_sync-0.0.1.gem
+```
 
 ## Thanks
 

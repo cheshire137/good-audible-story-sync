@@ -1,0 +1,47 @@
+name: Build gem
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-gem:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          ruby-version: ruby
+
+      - name: Get tag
+        id: get-tag
+        run: echo "SOURCE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: bundle install
+
+      - name: Build gem
+        run: gem build good_audible_story_sync.gemspec -o good-audible-story-sync-${SOURCE_TAG}.gem
+        env:
+          SOURCE_TAG: ${{ env.SOURCE_TAG }}
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: good-audible-story-sync-${SOURCE_TAG}.gem
+          tag_name: ${{ github.event.inputs.release_tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          SOURCE_TAG: ${{ env.SOURCE_TAG }}
