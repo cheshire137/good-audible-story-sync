@@ -280,8 +280,8 @@ module GoodAudibleStorySync
       def to_s(limit: 5, stylize: false)
         [
           "📚 Loaded #{total_items} #{item_units} from Audible library",
-          finished_items_summary(limit: limit, stylize: stylize),
           not_started_items_summary(limit: limit, stylize: stylize),
+          finished_items_summary(limit: limit, stylize: stylize),
           started_items_summary(limit: limit, stylize: stylize),
         ].compact.join("\n")
       end
