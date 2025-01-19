@@ -33,9 +33,14 @@ module GoodAudibleStorySync
           ->(book) { book.save_to_database(books_db) },
           T.proc.params(arg0: GoodAudibleStorySync::Storygraph::Book).void
         )
-        library = client.get_read_books(process_book: save_book)
-        library.update_sync_time(db_client.sync_times)
-        library
+        begin
+          library = client.get_read_books(process_book: save_book)
+          library.update_sync_time(db_client.sync_times)
+          library
+        rescue Client::Error => err
+          puts "#{Util::ERROR_EMOJI} Error loading Storygraph library: #{err}"
+          exit 1
+        end
       end
 
       sig { params(books_db: Database::StorygraphBooks).returns(Library) }
