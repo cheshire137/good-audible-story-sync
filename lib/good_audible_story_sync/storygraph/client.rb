@@ -12,6 +12,7 @@ module GoodAudibleStorySync
       BASE_URL = Auth::BASE_URL
 
       class NotAuthenticatedError < StandardError; end
+      class Error < StandardError; end
 
       sig { returns Mechanize }
       attr_reader :agent
@@ -37,7 +38,9 @@ module GoodAudibleStorySync
 
       sig { params(book_id: String).returns(Mechanize::Page) }
       def get_book_page(book_id)
-        get("/books/#{book_id}")
+        page = get("/books/#{book_id}")
+        raise Error.new("Could not get book #{book_id}") unless page
+        page
       end
 
       sig { params(book_id: String, finish_date: Date).returns(T::Boolean) }
@@ -105,7 +108,7 @@ module GoodAudibleStorySync
         true
       end
 
-      sig { params(path: String).returns(Mechanize::Page) }
+      sig { params(path: String).returns(T.nilable(Mechanize::Page)) }
       def get(path)
         url = "#{BASE_URL}#{path}"
         puts "#{Util::INFO_EMOJI} GET #{Rainbow(url).blue}"
@@ -122,6 +125,7 @@ module GoodAudibleStorySync
       end
       def get_read_books(page: 1, load_all_pages: true, process_book: nil)
         initial_page = get("/books-read/#{@auth.username}?page=#{page}")
+        raise Error.new("Could not load page #{page} of read books") unless initial_page
 
         filter_header_prefix = "Filter list "
         filter_header_el = initial_page.search(".filter-menu *").detect do |el|
@@ -173,6 +177,8 @@ module GoodAudibleStorySync
 
         params = { "search_term" => query }
         page = get("/search?#{URI.encode_www_form(params)}")
+        raise Error.new("Could not load search results for '#{query}'") unless page
+
         search_results_list = page.at("#search-results-ul")
         return [] unless search_results_list
 
@@ -188,9 +194,14 @@ module GoodAudibleStorySync
           page.link_with(text: /Click to edit read date/)
       end
 
-      sig { params(make_request: T.proc.returns(Mechanize::Page)).returns(Mechanize::Page) }
+      sig { params(make_request: T.proc.returns(Mechanize::Page)).returns(T.nilable(Mechanize::Page)) }
       def load_page(make_request)
-        page = make_request.call
+        page = begin
+          make_request.call
+        rescue Mechanize::ResponseCodeError => err
+          puts "#{Util::ERROR_EMOJI} Error loading page: #{err}"
+          return nil
+        end
         raise NotAuthenticatedError if Auth.sign_in_page?(page)
         sleep 1 # don't hammer the server
         page
@@ -206,6 +217,7 @@ module GoodAudibleStorySync
       def get_read_books_on_page(path: nil, page: nil, load_all_pages: true)
         if path
           page = get(path)
+          raise Error.new("Could not load read books via page #{path}") unless page
         elsif page.nil?
           raise "Either a relative URL or a page must be provided"
         end
