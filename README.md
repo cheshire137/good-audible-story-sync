@@ -107,6 +107,14 @@ This will create a file like project_pull_mover-0.0.1.gem which you can then ins
 gem install good_audible_story_sync-0.0.1.gem
 ```
 
+### Publishing the gem to RubyGems.org
+
+After running `gem build`, you can publish the version you built to RubyGems.org via:
+
+```sh
+gem push good_audible_story_sync-0.0.x.gem
+```
+
 ## Thanks
 
 - [mkb79's Python Audible library](https://github.com/mkb79/Audible) for providing an example of how to authenticate with Audible and use its API, including the [unofficial API docs](https://audible.readthedocs.io/en/master/misc/external_api.html).
