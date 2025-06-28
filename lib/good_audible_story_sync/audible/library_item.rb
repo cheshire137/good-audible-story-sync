@@ -10,6 +10,8 @@ module GoodAudibleStorySync
     class LibraryItem
       extend T::Sig
 
+      sig { returns Hash }
+      attr_reader :data
 
       sig { params(data: Hash).void }
       def initialize(data)
