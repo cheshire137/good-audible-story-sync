@@ -193,6 +193,13 @@ module GoodAudibleStorySync
         nil
       end
 
+      # Public: Get a rough idea of when the item would have been listened to. The start date will be too broad, as
+      # it's just when the item was added to the library and not necessarily when it was begun.
+      sig { returns T::Range[T.nilable(DateTime)] }
+      def listening_time_range
+        @listening_time_range ||= Range.new(added_to_library_at, last_listened_at)
+      end
+
       sig { returns T::Hash[Symbol, T.untyped] }
       def to_h
         @to_h ||= @data.reject { |k, v| v.nil? }.map { |k, v| [k.to_sym, v] }.to_h.merge(
