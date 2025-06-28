@@ -59,11 +59,7 @@ GEM
     nkf (0.2.0)
     nokogiri (1.17.2-aarch64-linux)
       racc (~> 1.4)
-    nokogiri (1.17.2-arm-linux)
-      racc (~> 1.4)
     nokogiri (1.17.2-arm64-darwin)
-      racc (~> 1.4)
-    nokogiri (1.17.2-x86-linux)
       racc (~> 1.4)
     nokogiri (1.17.2-x86_64-darwin)
       racc (~> 1.4)
@@ -95,9 +91,7 @@ GEM
       thor (>= 0.19.2)
     sqlite3 (2.4.1-aarch64-linux-gnu)
     sqlite3 (2.4.1-aarch64-linux-musl)
-    sqlite3 (2.4.1-arm-linux-gnu)
     sqlite3 (2.4.1-arm64-darwin)
-    sqlite3 (2.4.1-x86-linux-gnu)
     sqlite3 (2.4.1-x86_64-darwin)
     sqlite3 (2.4.1-x86_64-linux-gnu)
     sqlite3 (2.4.1-x86_64-linux-musl)
@@ -113,10 +107,8 @@ PLATFORMS
   aarch64-linux
   aarch64-linux-gnu
   aarch64-linux-musl
-  arm-linux
   arm64-darwin
   universal-darwin
-  x86-linux
   x86_64-darwin
   x86_64-linux
   x86_64-linux-gnu
@@ -133,4 +125,4 @@ DEPENDENCIES
   tapioca!
 
 BUNDLED WITH
-   2.6.0
+   2.6.9
