@@ -25,6 +25,9 @@ module GoodAudibleStorySync
       def finished_at
         return @finished_at if defined?(@finished_at)
         finished_at_str = @data["finished_at"]
+        if finished_at_str.nil? && @data.dig("listening_status", "is_finished")
+          finished_at_str = @data.dig("listening_status", "finished_at")
+        end
         @finished_at = finished_at_str ? DateTime.parse(finished_at_str) : nil
       rescue Date::Error
         nil
