@@ -72,6 +72,18 @@ bin/good-audible-story-sync
 
 Run `srb tc` to run the [Sorbet type checker](https://sorbet.org/).
 
+You can also run `irb` to get an interactive Ruby console with some convenient methods available for debugging, including:
+
+- #load_db_client
+- #load_options
+- #get_audible_auth
+- #get_audible_client
+- #get_audible_library
+- #get_storygraph_auth
+- #get_storygraph_client
+- #get_goodreads_auth
+- #get_goodreads_client
+
 ### Creating a tag
 
 Update `VERSION` in [version.rb](./lib/good_audible_story_sync/version.rb).
