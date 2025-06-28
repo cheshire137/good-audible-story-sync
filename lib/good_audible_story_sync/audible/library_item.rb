@@ -118,7 +118,8 @@ module GoodAudibleStorySync
 
       sig { returns T::Boolean }
       def started?
-        percent_complete > 0 || !@data["listening_status"].nil?
+        return @is_started if defined?(@is_started)
+        @is_started = percent_complete > 0 || !@data["listening_status"].nil?
       end
 
       sig { returns T.nilable(String) }
