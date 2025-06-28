@@ -29,8 +29,11 @@ module GoodAudibleStorySync
 
       sig { returns T.nilable(DateTime) }
       def added_to_library_at
-        date_str = @data.dig("library_status", "date_added") || @data["purchase_date"]
-        DateTime.parse(date_str) if date_str
+        return @added_to_library_at if defined?(@added_to_library_at)
+        date_added_str = @data.dig("library_status", "date_added")
+        @added_to_library_at = date_added_str ? DateTime.parse(date_added_str) : purchase_date
+      rescue Date::Error
+        nil
       end
 
       sig { returns T.nilable(String) }
