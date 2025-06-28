@@ -18,6 +18,9 @@ module GoodAudibleStorySync
         load_finish_times = T.let(false, T::Boolean)
         library_cache_last_modified = db_client.sync_times.find(SYNC_TIME_KEY)&.to_time
         library_is_cached = !library_cache_last_modified.nil?
+        if library_is_cached
+          puts "#{Util::INFO_EMOJI} Audible library last cached at #{Util.pretty_time(library_cache_last_modified)}"
+        end
         should_refresh_library = library_cache_last_modified &&
           library_cache_last_modified > options.refresh_cutoff_time
 
@@ -25,10 +28,7 @@ module GoodAudibleStorySync
           library = load_from_database(db_client.audible_books)
           load_finish_times = !library.any_finished_time_loaded?
         else
-          if library_is_cached
-            puts "#{Util::INFO_EMOJI} Audible library cache has not been updated " \
-              "since #{Util.pretty_time(library_cache_last_modified)}, updating..."
-          end
+          puts "#{Util::INFO_EMOJI} Updating Audible library cache..." if library_is_cached
           library = client.get_all_library_pages
           load_finish_times = true
         end
