@@ -169,9 +169,21 @@ module GoodAudibleStorySync
         [title, Util.join_words(authors)].compact.join(" ")
       end
 
-      sig { returns Hash }
+      sig { returns T.nilable(DateTime) }
+      def purchase_date
+        return @purchase_date if defined?(@purchase_date)
+        purchase_date_str = @data["purchase_date"]
+        @purchase_date = purchase_date_str ? DateTime.parse(purchase_date_str) : nil
+      rescue Date::Error
+        nil
+      end
+
+      sig { returns T::Hash[Symbol, T.untyped] }
       def to_h
-        @data.merge(finished_at: finished_at&.iso8601)
+        @to_h ||= @data.reject { |k, v| v.nil? }.map { |k, v| [k.to_sym, v] }.to_h.merge(
+          finished_at: finished_at&.iso8601,
+          purchase_date: purchase_date&.iso8601,
+        )
       end
     end
   end
