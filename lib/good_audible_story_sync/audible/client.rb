@@ -126,6 +126,17 @@ module GoodAudibleStorySync
         [total_count, page_items]
       end
 
+      # https://audible.readthedocs.io/en/latest/misc/external_api.html#get--1.0-badges-progress
+      def get_badge_progress
+        raise NotAuthenticatedError unless @auth.access_token
+
+        params = { locale: "en_US", store: "Audible" }
+        url = "#{@api_url}/1.0/badges/progress?#{URI.encode_www_form(params)}"
+        puts "#{Util::INFO_EMOJI} GET #{url}"
+        make_request = -> { HTTParty.get(url, headers: headers) }
+        make_json_request(make_request, action: "get badge progress")
+      end
+
       sig { returns Library }
       def get_all_library_pages
         per_page = 999
