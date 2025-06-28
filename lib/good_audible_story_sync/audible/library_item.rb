@@ -10,13 +10,19 @@ module GoodAudibleStorySync
     class LibraryItem
       extend T::Sig
 
-      sig { returns T.nilable(DateTime) }
-      attr_accessor :finished_at
 
       sig { params(data: Hash).void }
       def initialize(data)
         @data = data
-        @finished_at = data["finished_at"] ? DateTime.parse(data["finished_at"]) : nil
+      end
+
+      sig { returns T.nilable(DateTime) }
+      def finished_at
+        return @finished_at if defined?(@finished_at)
+        finished_at_str = @data["finished_at"]
+        @finished_at = finished_at_str ? DateTime.parse(finished_at_str) : nil
+      rescue Date::Error
+        nil
       end
 
       sig { returns T.nilable(DateTime) }
