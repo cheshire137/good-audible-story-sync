@@ -103,6 +103,16 @@ module GoodAudibleStorySync
         LibraryItem.new(data["item"])
       end
 
+      # https://audible.readthedocs.io/en/latest/misc/external_api.html#get--1.0-orders
+      def get_orders
+        raise NotAuthenticatedError unless @auth.access_token
+
+        url = "#{@api_url}/1.0/orders"
+        puts "#{Util::INFO_EMOJI} GET #{url}"
+        make_request = -> { HTTParty.get(url, headers: headers) }
+        make_json_request(make_request, action: "get orders")
+      end
+
       # https://audible.readthedocs.io/en/master/misc/external_api.html#library
       sig { params(page: Integer, per_page: Integer).returns([Integer, T::Array[LibraryItem]]) }
       def get_library_page(page: 1, per_page: 50)
