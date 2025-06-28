@@ -10,6 +10,9 @@ module GoodAudibleStorySync
     class LibraryItem
       extend T::Sig
 
+      sig { params(finished_at: T.nilable(DateTime)).void }
+      attr_writer :finished_at
+
       sig { returns Hash }
       attr_reader :data
 
