@@ -7,7 +7,7 @@ Script to sync your read books from Audible to Goodreads and StoryGraph.
 > [!NOTE]
 > This is intended to be run from macOS.
 
-Download the [latest release](https://github.com/cheshire137/good-audible-story-sync/releases/latest) of the gem. Install it via:
+Download the [latest release](https://github.com/cheshire137/good-audible-story-sync/releases/latest) of the gem. It's also available [on RubyGems.org](https://rubygems.org/gems/good_audible_story_sync). Install it via:
 
 ```sh
 gem install good-audible-story-sync.gem
